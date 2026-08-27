@@ -9,151 +9,214 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#0b0b0c;
-    --paper:#f2f1ec;
-    --race:#e0132a;
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{height:100%;}
-  body{
-    background:var(--ink);
-    color:var(--paper);
-    font-family:'Work Sans', sans-serif;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-  }
+:root{
+--ink:#0b0b0c;
+--paper:#f2f1ec;
+--race:#e0132a;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+background:var(--ink);
+color:var(--paper);
+font-family:'Work Sans', sans-serif;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+}
 
-  header.top{
-    padding: 28px clamp(20px,5vw,56px) 0;
-    font-family:'JetBrains Mono', monospace;
-    font-size:11px;
-    letter-spacing:.12em;
-    color: rgba(242,241,236,0.55);
-    text-transform:uppercase;
-  }
+header.top{
+padding: 28px clamp(20px,5vw,56px) 0;
+font-family:'JetBrains Mono', monospace;
+font-size:11px;
+letter-spacing:.12em;
+color: rgba(242,241,236,0.55);
+text-transform:uppercase;
+}
 
-  main{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding: 40px 24px;
-  }
+main{
+flex:1;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
+padding: 40px 24px 56px;
+}
 
-  /* placeholder for logo/mark artwork — drop an <img> here later */
-  .mark-slot{
-    width:96px; height:96px;
-    margin-bottom: 28px;
-    border:1.5px dashed rgba(242,241,236,0.25);
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:'JetBrains Mono', monospace;
-    font-size:9px;
-    letter-spacing:.08em;
-    color: rgba(242,241,236,0.3);
-    text-transform:uppercase;
-  }
+.mark-slot{
+width:96px; height:96px;
+margin-bottom: 28px;
+border:1.5px dashed rgba(242,241,236,0.25);
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-family:'JetBrains Mono', monospace;
+font-size:9px;
+letter-spacing:.08em;
+color: rgba(242,241,236,0.3);
+text-transform:uppercase;
+}
 
-  .wordmark{
-    font-family:'Anton', sans-serif;
-    font-weight:400;
-    font-size: clamp(38px, 8vw, 74px);
-    line-height:0.98;
-    letter-spacing: 0.01em;
-    text-transform:uppercase;
-  }
-  .wordmark .accent{ color:var(--race); }
+.wordmark{
+font-family:'Anton', sans-serif;
+font-weight:400;
+font-size: clamp(38px, 8vw, 74px);
+line-height:0.98;
+letter-spacing: 0.01em;
+text-transform:uppercase;
+}
+.wordmark .accent{ color:var(--race); }
 
-  .tagline{
-    margin-top:16px;
-    font-family:'JetBrains Mono', monospace;
-    font-size: clamp(11px,1.6vw,13px);
-    letter-spacing:.2em;
-    text-transform:uppercase;
-    color: rgba(242,241,236,0.6);
-  }
+.tagline{
+margin-top:16px;
+font-family:'JetBrains Mono', monospace;
+font-size: clamp(11px,1.6vw,13px);
+letter-spacing:.2em;
+text-transform:uppercase;
+color: rgba(242,241,236,0.6);
+}
 
-  .links{
-    margin-top: 44px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:14px;
-    justify-content:center;
-  }
-  .btn{
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    padding: 15px 32px;
-    border:1.5px solid var(--paper);
-    color:var(--paper);
-    text-decoration:none;
-    font-family:'JetBrains Mono', monospace;
-    font-size:13px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    background:transparent;
-    transition: background .2s ease, color .2s ease;
-  }
-  .btn:hover{
-    background:var(--paper);
-    color:var(--ink);
-  }
-  .btn.primary{
-    border-color:var(--race);
-    background:var(--race);
-  }
-  .btn.primary:hover{
-    background: var(--paper);
-    color: var(--race);
-    border-color: var(--paper);
-  }
-  .btn:focus-visible{
-    outline: 2px solid var(--race);
-    outline-offset:3px;
-  }
+.social-row{
+margin-top: 40px;
+display:flex;
+flex-wrap:wrap;
+gap:12px;
+justify-content:center;
+}
+.btn{
+display:inline-flex;
+align-items:center;
+gap:10px;
+padding: 14px 28px;
+border:1.5px solid var(--paper);
+color:var(--paper);
+text-decoration:none;
+font-family:'JetBrains Mono', monospace;
+font-size:12.5px;
+letter-spacing:.1em;
+text-transform:uppercase;
+background:transparent;
+transition: background .2s ease, color .2s ease;
+}
+.btn:hover{
+background:var(--paper);
+color:var(--ink);
+}
+.btn.primary{
+border-color:var(--race);
+background:var(--race);
+}
+.btn.primary:hover{
+background: var(--paper);
+color: var(--race);
+border-color: var(--paper);
+}
+.btn:focus-visible{
+outline: 2px solid var(--race);
+outline-offset:3px;
+}
 
-  footer{
-    padding: 24px clamp(20px,5vw,56px) 30px;
-    text-align:center;
-    font-family:'JetBrains Mono', monospace;
-    font-size:10.5px;
-    letter-spacing:.1em;
-    color: rgba(242,241,236,0.4);
-    text-transform:uppercase;
-  }
+.link-stack{
+margin-top: 28px;
+display:flex;
+flex-direction:column;
+gap:12px;
+width: 100%;
+max-width: 380px;
+}
+.link-block{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+padding: 15px 20px;
+border:1.5px solid rgba(242,241,236,0.5);
+color:var(--paper);
+text-decoration:none;
+font-family:'Work Sans', sans-serif;
+font-weight:500;
+font-size:14px;
+letter-spacing:.02em;
+background: rgba(242,241,236,0.03);
+transition: background .2s ease, border-color .2s ease, transform .15s ease;
+}
+.link-block:hover{
+background: rgba(242,241,236,0.1);
+border-color: var(--paper);
+transform: translateY(-1px);
+}
+.link-block:focus-visible{
+outline: 2px solid var(--race);
+outline-offset:2px;
+}
 
-  @media (max-width:480px){
-    .links{ flex-direction:column; width:100%; }
-    .btn{ justify-content:center; width:100%; }
-  }
+.divider{
+width:100%;
+max-width:380px;
+margin: 30px 0 4px;
+display:flex;
+align-items:center;
+gap:14px;
+color: rgba(242,241,236,0.35);
+font-family:'JetBrains Mono', monospace;
+font-size:10px;
+letter-spacing:.15em;
+text-transform:uppercase;
+}
+.divider::before, .divider::after{
+content:'';
+flex:1;
+height:1px;
+background: rgba(242,241,236,0.15);
+}
+
+footer{
+padding: 24px clamp(20px,5vw,56px) 30px;
+text-align:center;
+font-family:'JetBrains Mono', monospace;
+font-size:10.5px;
+letter-spacing:.1em;
+color: rgba(242,241,236,0.4);
+text-transform:uppercase;
+}
+
+@media (max-width:480px){
+.social-row{ flex-direction:column; width:100%; max-width:380px; }
+.btn{ justify-content:center; width:100%; }
+}
 </style>
 </head>
 <body>
-  <header class="top">
-    <span>Sweet Rabbit Man Official</span>
-  </header>
+<header class="top">
+<span>Sweet Rabbit Man Official</span>
+</header>
 
-  <main>
-    <div class="mark-slot" aria-hidden="true">logo</div>
+<main>
+<div class="mark-slot" aria-hidden="true">logo</div>
 
-    <h1 class="wordmark">Sweet Rabbit Man</h1>
-    <p class="tagline">Official</p>
+<h1 class="wordmark">Sweet Rabbit Man</h1>
+<p class="tagline">Official</p>
 
-    <nav class="links">
-      <a class="btn primary" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener">Instagram →</a>
-      <a class="btn" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener">X →</a>
-    </nav>
-  </main>
+<nav class="social-row">
+<a class="btn primary" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener">Instagram →</a>
+<a class="btn" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener">X →</a>
+<a class="btn" href="https://www.threads.net/@sweetrabbitman" target="_blank" rel="noopener">Threads →</a>
+</nav>
 
-  <footer>
-    <span>© 2026 Sweet Rabbit Man Official</span>
-  </footer>
+<div class="divider">Links</div>
+
+<nav class="link-stack">
+<a class="link-block" href="https://myship.7-11.com.tw/general/detail/GM2307050649203" target="_blank" rel="noopener">SHOP（賣貨便）</a>
+<a class="link-block" href="https://forms.gle/Jtf59aiJScAoodWw7" target="_blank" rel="noopener">Overseas Order Form</a>
+<a class="link-block" href="https://forms.gle/Zomnw74AUed8NaeAA" target="_blank" rel="noopener">常駐許願池</a>
+<a class="link-block" href="mailto:sweetrabbitman@gmail.com">Email</a>
+</nav>
+</main>
+
+<footer>
+<span>© 2026 Sweet Rabbit Man Official</span>
+</footer>
 </body>
 </html>
