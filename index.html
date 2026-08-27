@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SWEET RABBIT MAN</title>
-<meta name="description" content="Sweet Rabbit Man — a design attitude carried by a dark-circle rabbit.">
+<title>Sweet Rabbit Man Official</title>
+<meta name="description" content="Sweet Rabbit Man Official — official links.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -13,8 +13,6 @@
     --ink:#0b0b0c;
     --paper:#f2f1ec;
     --race:#e0132a;
-    --race-dim:#7a0a15;
-    --line: rgba(242,241,236,0.16);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{height:100%;}
@@ -25,26 +23,9 @@
     min-height:100vh;
     display:flex;
     flex-direction:column;
-    overflow-x:hidden;
-  }
-  /* faint speed-line backdrop */
-  .speedfield{
-    position:fixed; inset:0;
-    pointer-events:none;
-    background:
-      repeating-linear-gradient(
-        100deg,
-        transparent 0px,
-        transparent 68px,
-        var(--line) 68px,
-        var(--line) 69px
-      );
-    opacity:.5;
-    mask-image: radial-gradient(ellipse at 50% 30%, black, transparent 75%);
   }
 
   header.top{
-    display:flex; justify-content:space-between; align-items:center;
     padding: 28px clamp(20px,5vw,56px) 0;
     font-family:'JetBrains Mono', monospace;
     font-size:11px;
@@ -60,73 +41,56 @@
     align-items:center;
     justify-content:center;
     text-align:center;
-    padding: 40px 20px 20px;
-    position:relative;
+    padding: 40px 24px;
   }
 
-  .badge-wrap{
-    width:150px; height:150px;
-    margin-bottom: 34px;
-    position:relative;
-  }
-  .badge-wrap svg{ width:100%; height:100%; display:block; }
-  .heart-fill{ fill:var(--race); }
-  .heart-line{ fill:none; stroke:var(--paper); stroke-width:2.5; }
-  .speedline{ stroke:var(--paper); stroke-width:3; stroke-linecap:round; opacity:0; transform-origin:right center; }
-  .badge-wrap .speedline.s1{ animation: dash 2.6s ease-in-out infinite; }
-  .badge-wrap .speedline.s2{ animation: dash 2.6s ease-in-out .15s infinite; }
-  .badge-wrap .speedline.s3{ animation: dash 2.6s ease-in-out .3s infinite; }
-  @keyframes dash{
-    0%{ opacity:0; transform:translateX(6px) scaleX(.4); }
-    35%{ opacity:1; transform:translateX(0) scaleX(1); }
-    70%{ opacity:1; }
-    100%{ opacity:0; transform:translateX(-4px) scaleX(1); }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .speedline{ animation:none !important; opacity:1; }
+  /* placeholder for logo/mark artwork — drop an <img> here later */
+  .mark-slot{
+    width:96px; height:96px;
+    margin-bottom: 28px;
+    border:1.5px dashed rgba(242,241,236,0.25);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:9px;
+    letter-spacing:.08em;
+    color: rgba(242,241,236,0.3);
+    text-transform:uppercase;
   }
 
   .wordmark{
     font-family:'Anton', sans-serif;
     font-weight:400;
-    font-size: clamp(42px, 9vw, 92px);
-    line-height:0.92;
+    font-size: clamp(38px, 8vw, 74px);
+    line-height:0.98;
     letter-spacing: 0.01em;
     text-transform:uppercase;
   }
   .wordmark .accent{ color:var(--race); }
 
-  .arch-tag{
-    margin-top:18px;
+  .tagline{
+    margin-top:16px;
     font-family:'JetBrains Mono', monospace;
     font-size: clamp(11px,1.6vw,13px);
-    letter-spacing:.22em;
+    letter-spacing:.2em;
     text-transform:uppercase;
-    color: rgba(242,241,236,0.65);
-  }
-
-  .statement{
-    max-width: 560px;
-    margin: 30px auto 0;
-    font-size: clamp(15px,2vw,18px);
-    line-height:1.65;
-    color: rgba(242,241,236,0.82);
-    font-weight:400;
+    color: rgba(242,241,236,0.6);
   }
 
   .links{
-    margin-top: 46px;
+    margin-top: 44px;
     display:flex;
     flex-wrap:wrap;
     gap:14px;
     justify-content:center;
   }
   .btn{
-    position:relative;
     display:inline-flex;
     align-items:center;
     gap:10px;
-    padding: 15px 30px;
+    padding: 15px 32px;
     border:1.5px solid var(--paper);
     color:var(--paper);
     text-decoration:none;
@@ -135,17 +99,15 @@
     letter-spacing:.1em;
     text-transform:uppercase;
     background:transparent;
-    transition: background .25s ease, color .25s ease, transform .15s ease;
+    transition: background .2s ease, color .2s ease;
   }
   .btn:hover{
     background:var(--paper);
     color:var(--ink);
-    transform: translateY(-2px);
   }
   .btn.primary{
     border-color:var(--race);
     background:var(--race);
-    color:var(--paper);
   }
   .btn.primary:hover{
     background: var(--paper);
@@ -159,9 +121,7 @@
 
   footer{
     padding: 24px clamp(20px,5vw,56px) 30px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    text-align:center;
     font-family:'JetBrains Mono', monospace;
     font-size:10.5px;
     letter-spacing:.1em;
@@ -170,55 +130,30 @@
   }
 
   @media (max-width:480px){
-    footer{ flex-direction:column; gap:8px; text-align:center; }
     .links{ flex-direction:column; width:100%; }
     .btn{ justify-content:center; width:100%; }
   }
 </style>
 </head>
 <body>
-  <div class="speedfield"></div>
-
   <header class="top">
-    <span>SRM — EST. TAIPEI</span>
-    <span>ALL DAY / EVERY DAY</span>
+    <span>Sweet Rabbit Man Official</span>
   </header>
 
   <main>
-    <div class="badge-wrap" aria-hidden="true">
-      <svg viewBox="0 0 150 150">
-        <line class="speedline s1" x1="8" y1="55" x2="34" y2="55"/>
-        <line class="speedline s2" x1="2" y1="75" x2="32" y2="75"/>
-        <line class="speedline s3" x1="8" y1="95" x2="34" y2="95"/>
-        <path class="heart-fill" d="M75 122
-          C 30 92, 14 62, 30 40
-          C 42 24, 66 26, 75 46
-          C 84 26, 108 24, 120 40
-          C 136 62, 120 92, 75 122 Z"/>
-        <path class="heart-line" d="M75 122
-          C 30 92, 14 62, 30 40
-          C 42 24, 66 26, 75 46
-          C 84 26, 108 24, 120 40
-          C 136 62, 120 92, 75 122 Z"/>
-      </svg>
-    </div>
+    <div class="mark-slot" aria-hidden="true">logo</div>
 
-    <h1 class="wordmark">SWEET<br>RABBIT<span class="accent">.</span>MAN</h1>
-    <p class="arch-tag">Est. Taipei — A Design Attitude</p>
-
-    <p class="statement">
-      不是玩具品牌,是一種視覺文法。從黑眼圈兔子出發,態度不變,形式一直換。
-    </p>
+    <h1 class="wordmark">Sweet Rabbit<br>Man</h1>
+    <p class="tagline">Official</p>
 
     <nav class="links">
       <a class="btn primary" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener">Instagram →</a>
-      <a class="btn" href="#" target="_blank" rel="noopener">kenelestore (JP) →</a>
+      <a class="btn" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener">X →</a>
     </nav>
   </main>
 
   <footer>
-    <span>© 2026 Sweet Rabbit Man</span>
-    <span>Taipei · Tokyo</span>
+    <span>© 2026 Sweet Rabbit Man Official</span>
   </footer>
 </body>
 </html>
