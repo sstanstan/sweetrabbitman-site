@@ -11,160 +11,150 @@
 <meta property="og:url" content="https://sweetrabbitman.com/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#7a2e12">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root{
 --ink:#0b0b0c;
---paper:#f2f1ec;
+--paper:#f8f4ee;
 --race:#e0132a;
+--court-1:#d9772f;
+--court-2:#a94a1c;
+--court-3:#5c1f0d;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html,body{height:100%;}
 body{
-background:var(--ink);
 color:var(--paper);
 font-family:'Work Sans', sans-serif;
 min-height:100vh;
+}
+
+.hero{
+position:relative;
+min-height:100vh;
 display:flex;
 flex-direction:column;
+overflow:hidden;
+/* placeholder background: orange gradient standing in for the court photo */
+background:
+linear-gradient(180deg, rgba(10,6,4,0.15) 0%, rgba(10,6,4,0.55) 62%, rgba(10,6,4,0.82) 100%),
+radial-gradient(120% 90% at 30% 15%, var(--court-1) 0%, var(--court-2) 45%, var(--court-3) 100%);
+}
+/* subtle diagonal court-line texture */
+.hero::before{
+content:'';
+position:absolute; inset:0;
+background:
+repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 140px),
+repeating-linear-gradient(25deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 180px);
+pointer-events:none;
 }
 
 header.top{
-padding: 28px clamp(20px,5vw,56px) 0;
+position:relative; z-index:2;
+padding: 26px clamp(20px,5vw,56px) 0;
 font-family:'JetBrains Mono', monospace;
 font-size:11px;
 letter-spacing:.12em;
-color: rgba(242,241,236,0.55);
+color: rgba(248,244,238,0.75);
 text-transform:uppercase;
 }
 
 main{
+position:relative; z-index:2;
 flex:1;
 display:flex;
 flex-direction:column;
 align-items:center;
 justify-content:center;
 text-align:center;
-padding: 40px 24px 56px;
+padding: 40px 20px 64px;
 }
 
 .mark-slot{
-width:140px; height:140px;
-margin-bottom: 28px;
+width: clamp(88px, 16vw, 120px);
+height: clamp(88px, 16vw, 120px);
+margin-bottom: 20px;
 display:flex;
 align-items:center;
 justify-content:center;
+filter: drop-shadow(0 2px 10px rgba(0,0,0,0.35));
 }
-.mark-slot img{
-width:100%;
-height:100%;
-object-fit:contain;
-}
+.mark-slot img{ width:100%; height:100%; object-fit:contain; }
 
-.wordmark{
+.headline{
 font-family:'Anton', sans-serif;
 font-weight:400;
-font-size: clamp(38px, 8vw, 74px);
-line-height:0.98;
+font-size: clamp(52px, 12vw, 128px);
+line-height:0.92;
 letter-spacing: 0.01em;
 text-transform:uppercase;
-}
-.wordmark .accent{ color:var(--race); }
-
-.tagline{
-margin-top:16px;
-font-family:'JetBrains Mono', monospace;
-font-size: clamp(11px,1.6vw,13px);
-letter-spacing:.2em;
-text-transform:uppercase;
-color: rgba(242,241,236,0.6);
+color:var(--paper);
+text-shadow: 0 6px 30px rgba(0,0,0,0.35);
+max-width: 1100px;
 }
 
-.social-row{
-margin-top: 40px;
+.subtext{
+margin-top:22px;
+max-width:600px;
+font-size: clamp(14px,1.9vw,17px);
+line-height:1.65;
+color: rgba(248,244,238,0.88);
+font-weight:400;
+}
+
+.cta-row{
+margin-top: 34px;
 display:flex;
 flex-wrap:wrap;
-gap:12px;
+gap:14px;
 justify-content:center;
 }
-.btn{
+.pill{
 display:inline-flex;
 align-items:center;
-gap:10px;
-padding: 14px 28px;
-border:1.5px solid var(--paper);
-color:var(--paper);
+gap:8px;
+padding: 15px 30px;
+border-radius:999px;
 text-decoration:none;
-font-family:'JetBrains Mono', monospace;
-font-size:12.5px;
-letter-spacing:.1em;
-text-transform:uppercase;
-background:transparent;
-transition: background .2s ease, color .2s ease;
+font-family:'Work Sans', sans-serif;
+font-weight:600;
+font-size:14.5px;
+letter-spacing:.01em;
+transition: transform .15s ease, background .2s ease, opacity .2s ease;
 }
-.btn:hover{
-background:var(--paper);
-color:var(--ink);
-}
-.btn.primary{
-border-color:var(--race);
+.pill:hover{ transform: translateY(-2px); }
+.pill.solid{
 background:var(--race);
+color:var(--paper);
 }
-.btn.primary:hover{
-background: var(--paper);
-color: var(--race);
-border-color: var(--paper);
+.pill.solid:hover{ opacity:.9; }
+.pill.outline{
+background: rgba(11,6,4,0.35);
+color:var(--paper);
+border:1.5px solid rgba(248,244,238,0.7);
 }
-.btn:focus-visible{
-outline: 2px solid var(--race);
+.pill.outline:hover{
+background: rgba(11,6,4,0.55);
+border-color:var(--paper);
+}
+.pill:focus-visible{
+outline: 2px solid var(--paper);
 outline-offset:3px;
 }
 
-.link-stack{
-margin-top: 28px;
-display:flex;
-flex-direction:column;
-gap:12px;
-width: 100%;
-max-width: 380px;
-}
-.link-block{
-display:flex;
-align-items:center;
-justify-content:center;
-gap:8px;
-padding: 15px 20px;
-border:1.5px solid rgba(242,241,236,0.5);
-color:var(--paper);
-text-decoration:none;
-font-family:'Work Sans', sans-serif;
-font-weight:500;
-font-size:14px;
-letter-spacing:.02em;
-background: rgba(242,241,236,0.03);
-transition: background .2s ease, border-color .2s ease, transform .15s ease;
-}
-.link-block:hover{
-background: rgba(242,241,236,0.1);
-border-color: var(--paper);
-transform: translateY(-1px);
-}
-.link-block:focus-visible{
-outline: 2px solid var(--race);
-outline-offset:2px;
-}
-
 .divider{
+position:relative; z-index:2;
 width:100%;
-max-width:380px;
-margin: 30px 0 4px;
+max-width:420px;
+margin: 42px 0 6px;
 display:flex;
 align-items:center;
 gap:14px;
-color: rgba(242,241,236,0.35);
+color: rgba(248,244,238,0.55);
 font-family:'JetBrains Mono', monospace;
 font-size:10px;
 letter-spacing:.15em;
@@ -174,26 +164,63 @@ text-transform:uppercase;
 content:'';
 flex:1;
 height:1px;
-background: rgba(242,241,236,0.15);
+background: rgba(248,244,238,0.3);
+}
+
+.link-stack{
+position:relative; z-index:2;
+margin-top: 22px;
+display:flex;
+flex-direction:column;
+gap:12px;
+width: 100%;
+max-width: 420px;
+}
+.link-pill{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+padding: 15px 22px;
+border-radius:999px;
+border:1.5px solid rgba(248,244,238,0.55);
+color:var(--paper);
+text-decoration:none;
+font-family:'Work Sans', sans-serif;
+font-weight:500;
+font-size:14px;
+background: rgba(11,6,4,0.3);
+transition: background .2s ease, border-color .2s ease, transform .15s ease;
+}
+.link-pill:hover{
+background: rgba(11,6,4,0.55);
+border-color: var(--paper);
+transform: translateY(-1px);
+}
+.link-pill:focus-visible{
+outline: 2px solid var(--paper);
+outline-offset:2px;
 }
 
 footer{
-padding: 24px clamp(20px,5vw,56px) 30px;
+position:relative; z-index:2;
+padding: 26px clamp(20px,5vw,56px) 34px;
 text-align:center;
 font-family:'JetBrains Mono', monospace;
 font-size:10.5px;
 letter-spacing:.1em;
-color: rgba(242,241,236,0.4);
+color: rgba(248,244,238,0.55);
 text-transform:uppercase;
 }
 
 @media (max-width:480px){
-.social-row{ flex-direction:column; width:100%; max-width:380px; }
-.btn{ justify-content:center; width:100%; }
+.cta-row{ flex-direction:column; width:100%; max-width:380px; }
+.pill{ justify-content:center; width:100%; }
 }
 </style>
 </head>
 <body>
+<div class="hero">
 <header class="top">
 <span>Sweet Rabbit Man Official</span>
 </header>
@@ -201,27 +228,28 @@ text-transform:uppercase;
 <main>
 <div class="mark-slot"><img src="logo.png" alt="Sweet Rabbit Man — The Sports Club"></div>
 
-<h1 class="wordmark">Sweet Rabbit Man</h1>
-<p class="tagline">Official</p>
+<h1 class="headline">Love All.</h1>
+<p class="subtext">不是玩具品牌，是一種視覺文法。從黑眼圈兔子出發，態度不變，形式一直換。</p>
 
-<nav class="social-row">
-<a class="btn primary" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener">Instagram →</a>
-<a class="btn" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener">X →</a>
-<a class="btn" href="https://www.threads.net/@sweetrabbitman" target="_blank" rel="noopener">Threads →</a>
+<nav class="cta-row">
+<a class="pill solid" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener">Instagram →</a>
+<a class="pill outline" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener">X →</a>
+<a class="pill outline" href="https://www.threads.net/@sweetrabbitman" target="_blank" rel="noopener">Threads →</a>
 </nav>
 
 <div class="divider">Links</div>
 
 <nav class="link-stack">
-<a class="link-block" href="https://myship.7-11.com.tw/general/detail/GM2307050649203" target="_blank" rel="noopener">SHOP（賣貨便）</a>
-<a class="link-block" href="https://forms.gle/Jtf59aiJScAoodWw7" target="_blank" rel="noopener">Overseas Order Form</a>
-<a class="link-block" href="https://forms.gle/Zomnw74AUed8NaeAA" target="_blank" rel="noopener">常駐許願池</a>
-<a class="link-block" href="mailto:sweetrabbitman@gmail.com">Email</a>
+<a class="link-pill" href="https://myship.7-11.com.tw/general/detail/GM2307050649203" target="_blank" rel="noopener">SHOP（賣貨便）</a>
+<a class="link-pill" href="https://forms.gle/Jtf59aiJScAoodWw7" target="_blank" rel="noopener">Overseas Order Form</a>
+<a class="link-pill" href="https://forms.gle/Zomnw74AUed8NaeAA" target="_blank" rel="noopener">常駐許願池</a>
+<a class="link-pill" href="mailto:sweetrabbitman@gmail.com">Email</a>
 </nav>
 </main>
 
 <footer>
 <span>© 2026 Sweet Rabbit Man Official</span>
 </footer>
+</div>
 </body>
 </html>
