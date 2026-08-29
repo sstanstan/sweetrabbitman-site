@@ -136,6 +136,40 @@ outline: 2px solid var(--paper);
 outline-offset:3px;
 }
 
+.gallery{
+position:relative; z-index:2;
+width:100%;
+max-width:420px;
+margin-top:40px;
+}
+.gallery-label{
+font-family:'JetBrains Mono', monospace;
+font-size:10px;
+letter-spacing:.15em;
+text-transform:uppercase;
+color: rgba(248,244,238,0.55);
+margin-bottom:12px;
+}
+.gallery-grid{
+border-radius:20px;
+overflow:hidden;
+border:1.5px solid rgba(248,244,238,0.25);
+}
+.gallery-grid a{
+display:block;
+aspect-ratio: 1 / 1;
+overflow:hidden;
+background: rgba(248,244,238,0.08);
+}
+.gallery-grid img{
+width:100%;
+height:100%;
+object-fit:cover;
+display:block;
+transition: transform .3s ease;
+}
+.gallery-grid a:hover img{ transform: scale(1.05); }
+
 .divider{
 position:relative; z-index:2;
 width:100%;
@@ -204,8 +238,26 @@ text-transform:uppercase;
 }
 
 @media (max-width:480px){
-.cta-row{ flex-direction:column; width:100%; max-width:380px; }
-.pill{ justify-content:center; width:100%; }
+header.top{ padding-top: 20px; }
+header.top span{
+display:block;
+font-size:10px;
+letter-spacing:.1em;
+}
+.hero{ min-height:100svh; }
+main{ padding: 28px 18px 48px; }
+.mark-slot{ width:76px; height:76px; margin-bottom:14px; }
+.headline{
+font-size: clamp(44px, 15vw, 72px);
+line-height:0.95;
+}
+.subtext{ margin-top:16px; font-size:14px; }
+.cta-row{ margin-top:26px; flex-direction:column; width:100%; max-width:380px; gap:10px; }
+.pill{ justify-content:center; width:100%; padding:13px 22px; }
+.divider{ margin:32px 0 4px; }
+.link-stack{ margin-top:18px; gap:10px; }
+.link-pill{ padding:13px 18px; font-size:13px; }
+footer{ padding: 20px 20px 26px; }
 }
 </style>
 </head>
@@ -216,7 +268,7 @@ text-transform:uppercase;
 </header>
 
 <main>
-<div class="mark-slot"><img src="logo.png" alt="Sweet Rabbit Man — The Sports Club"></div>
+<div class="mark-slot"><img src="logo.png" alt="Sweet Rabbit Man logo"></div>
 
 <h1 class="headline">Love All.</h1>
 <p class="subtext">Not a toy brand — a visual grammar. Starting from a dark-circled rabbit, the attitude stays, the form keeps changing.</p>
@@ -226,6 +278,14 @@ text-transform:uppercase;
 <a class="pill outline" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener">X →</a>
 <a class="pill outline" href="https://www.threads.net/@sweetrabbitman" target="_blank" rel="noopener">Threads →</a>
 </nav>
+
+<!-- Gallery: drop gallery-1.jpg (square-ish crop works best) into the same folder as index.html to replace this -->
+<div class="gallery">
+<div class="gallery-label">Gallery</div>
+<div class="gallery-grid">
+<a href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener"><img src="gallery-1.jpg" alt="Sweet Rabbit Man"></a>
+</div>
+</div>
 
 <div class="divider">Links</div>
 
