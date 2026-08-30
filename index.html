@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Sweet Rabbit Man Official</title>
 <meta name="description" content="Sweet Rabbit Man Official — official links.">
 <meta property="og:title" content="Sweet Rabbit Man Official">
@@ -45,10 +45,14 @@ url('hero-bg.jpg') center/cover no-repeat;
 
 header.top{
 position:relative; z-index:2;
-padding: 26px clamp(20px,5vw,56px) 0;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+padding: max(28px, calc(env(safe-area-inset-top) * 0.42)) clamp(22px,5vw,56px) 0;
 font-family:'JetBrains Mono', monospace;
 font-size:11px;
-letter-spacing:.12em;
+letter-spacing:.14em;
 color: rgba(248,244,238,0.75);
 text-transform:uppercase;
 }
@@ -99,23 +103,21 @@ font-weight:400;
 .cta-row{
 margin-top: 34px;
 display:flex;
-flex-wrap:wrap;
-gap:14px;
+gap:18px;
 justify-content:center;
 }
 .pill{
-display:inline-flex;
+display:flex;
 align-items:center;
-gap:8px;
-padding: 14px 26px;
-border-radius:999px;
+justify-content:center;
+width:60px;
+height:60px;
+border-radius:50%;
+flex-shrink:0;
 text-decoration:none;
-font-family:'Work Sans', sans-serif;
-font-weight:600;
-font-size:14px;
-letter-spacing:.01em;
 transition: transform .15s ease, background .2s ease, opacity .2s ease;
 }
+.pill svg, .pill img{ width:24px; height:24px; }
 .pill:hover{ transform: translateY(-2px); }
 .pill.solid{
 background:var(--race);
@@ -238,12 +240,13 @@ text-transform:uppercase;
 }
 
 @media (max-width:480px){
-header.top{ padding-top: 20px; }
+header.top{ padding-top: max(24px, calc(env(safe-area-inset-top) * 0.38)); padding-left: 11px; padding-right: 11px; gap:8px; }
 header.top span{
-display:block;
 font-size:10px;
 letter-spacing:.1em;
+white-space:nowrap;
 }
+header.top span:last-child{ width:122px; text-align:center; }
 .hero{ min-height:100svh; }
 main{ padding: 28px 18px 48px; }
 .mark-slot{ width:76px; height:76px; margin-bottom:14px; }
@@ -252,8 +255,9 @@ font-size: clamp(44px, 15vw, 72px);
 line-height:0.95;
 }
 .subtext{ margin-top:16px; font-size:14px; }
-.cta-row{ margin-top:26px; flex-direction:column; width:100%; max-width:380px; gap:10px; }
-.pill{ justify-content:center; width:100%; padding:13px 22px; }
+.cta-row{ margin-top:26px; gap:14px; }
+.pill{ width:52px; height:52px; }
+.pill svg, .pill img{ width:21px; height:21px; }
 .divider{ margin:32px 0 4px; }
 .link-stack{ margin-top:18px; gap:10px; }
 .link-pill{ padding:13px 18px; font-size:13px; }
@@ -264,19 +268,26 @@ footer{ padding: 20px 20px 26px; }
 <body>
 <div class="hero">
 <header class="top">
-<span>Sweet Rabbit Man Official</span>
+<span>Sweet Rabbit Man</span>
+<span>Official</span>
 </header>
 
 <main>
 <div class="mark-slot"><img src="logo.png" alt="Sweet Rabbit Man logo"></div>
 
 <h1 class="headline">Love All.</h1>
-<p class="subtext">Not a toy brand — a visual grammar. Starting from a dark-circled rabbit, the attitude stays, the form keeps changing.</p>
+<p class="subtext">No schedule, no scoreboard — just a pace that never quits.<br>Throwback, court, half-tired and still moving.<br>The shape changes, the attitude stays.</p>
 
 <nav class="cta-row">
-<a class="pill solid" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener">Instagram →</a>
-<a class="pill outline" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener">X →</a>
-<a class="pill outline" href="https://www.threads.net/@sweetrabbitman" target="_blank" rel="noopener">Threads →</a>
+<a class="pill outline" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener" aria-label="Instagram">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
+</a>
+<a class="pill outline" href="https://x.com/sweetrabbitman" target="_blank" rel="noopener" aria-label="X">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 3H21.7L15.4 10.2L22.8 21H17L12.4 14.6L7.1 21H4.3L11 13.3L3.9 3H9.8L14 8.9L18.9 3ZM17.9 19.2H19.5L8.9 4.7H7.2L17.9 19.2Z"/></svg>
+</a>
+<a class="pill outline" href="https://www.threads.net/@sweetrabbitman" target="_blank" rel="noopener" aria-label="Threads">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a14 14 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32l-1.757-1.18c.98-1.454 2.568-2.256 4.478-2.256h.044c3.194.02 5.097 1.975 5.287 5.388q.163.07.321.142c1.49.7 2.58 1.761 3.154 3.07.797 1.82.871 4.79-1.548 7.158-1.85 1.81-4.094 2.628-7.277 2.65Zm1.003-11.69q-.362 0-.739.021c-1.836.103-2.98.946-2.916 2.143.067 1.256 1.452 1.839 2.784 1.767 1.224-.065 2.818-.543 3.086-3.71a10.5 10.5 0 0 0-2.215-.221"/></svg>
+</a>
 </nav>
 
 <!-- Gallery: drop gallery-1.jpg (square-ish crop works best) into the same folder as index.html to replace this -->
