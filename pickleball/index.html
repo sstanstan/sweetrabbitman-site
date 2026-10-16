@@ -484,7 +484,7 @@ function serve(p,inp,sp){
   const b=game.ball;
   const fwd=p.face>0?inp.right:inp.left,back=p.face>0?inp.left:inp.right;
   let vx=(4.6+(fwd?0.3:0)-(back?0.3:0)+(Math.random()-.5)*0.25)*(sp||1);
-  p.swingT=14;b.vx=p.face*vx;b.vy=-6.2;b.spin=0;b.cut=false;
+  p.swingT=14;b.vx=p.face*vx;b.vy=-6.2;b.spin=0;b.cut=false;b.smash=false;
   game.lastHitter=p.i;game.hits=1;game.bounced=false;game.netTouch=false;game.phase="rally";p.cd=16;
   afterHit(p.i);
   sfx.hit();spark(b.x,b.y);$("hint").hidden=true;
@@ -506,7 +506,8 @@ function rallyOver(loser,reason){
   $("bnMain").textContent=reason;$("bnSub").textContent=sub;$("banner").hidden=false;
 }
 
-const SHOTS={smash:[6.2,1.1],dink:[1.9,-3.8],lob:[3.1,-7.4],drive:[5.8,-5.2],normal:[4.45,-5.5]};
+const SMASH_VX=7.2,SMASH_BOUNCE_VX=1.38,SMASH_BOUNCE_VY=.85;   // smash: faster, and after landing it kicks forward hard (hard to catch up with)
+const SHOTS={smash:[SMASH_VX,1.1],dink:[1.9,-3.8],lob:[3.1,-7.4],drive:[5.8,-5.2],normal:[4.45,-5.5]};
 // is it legal for p to hit the ball right now?
 function hitLegality(p){
   if(game.hits<3&&!game.bounced)return"two";            // two-bounce rule: return and third shot must bounce first
@@ -570,7 +571,7 @@ function tryHit(p){
     vx*=pw;vy*=pw<=1?.75+.25*pw:Math.pow(pw,-.2);   // soft = slower and a little lower; hard = faster and flatter
     spin=kind==="drive"?1:kind==="smash"?.4:0;
   }
-  b.spin=spin;b.cut=kind==="dink";
+  b.spin=spin;b.cut=kind==="dink";b.smash=kind==="smash";
   // fine control: where the ball meets the paddle and how fast it arrives shape the return
   const cx=Math.max(-1,Math.min(1,dx*p.face/r)),cy=Math.max(-1,Math.min(1,dy/r));
   const inSpd=Math.min(Math.abs(b.vx),6);
@@ -654,9 +655,9 @@ function aiInput(p){
     else tx=362;
   }else if(game.phase==="rally"&&game.lastHitter!==p.i){
     const mustBounce=game.hits<3;
-    let x=b.x,y=b.y,vx=b.vx,vy=b.vy,sp=b.spin||0,cut=!!b.cut,bounced=game.bounced,landX=null,volley=null,after=null;const hitY=p.y-HIT_DY;
+    let x=b.x,y=b.y,vx=b.vx,vy=b.vy,sp=b.spin||0,cut=!!b.cut,smash=!!b.smash,bounced=game.bounced,landX=null,volley=null,after=null;const hitY=p.y-HIT_DY;
     for(let k=0;k<320;k++){vy+=G_BALL+((p.i?x>NETX:x<NETX)?sp*G_SPIN:0);x+=vx;y+=vy;
-      if(y+BR>=GROUND){if(landX===null&&!bounced)landX=x;bounced=true;y=GROUND-BR;vy=-Math.abs(vy)*(cut?CUT_VY:.7);vx*=cut?CUT_VX:.88*(sp?SPIN_KICK:1);sp=0;cut=false}
+      if(y+BR>=GROUND){if(landX===null&&!bounced)landX=x;bounced=true;y=GROUND-BR;vy=-Math.abs(vy)*(cut?CUT_VY:smash?SMASH_BOUNCE_VY:.7);vx*=cut?CUT_VX:smash?.88*SMASH_BOUNCE_VX:.88*(sp?SPIN_KICK:1);sp=0;cut=false;smash=false}
       if(x>NETX+4){if(!bounced){if(vy>0&&y>=hitY-6&&volley===null)volley=x}else if(Math.abs(y-hitY)<9){after=x;break}}}
     const willBeOut=landX!==null&&landX>COURT_R+4&&b.vx>0&&!game.bounced;
     let target=after;
@@ -741,7 +742,7 @@ function step(){
       // find where the ball really touched down (it can move ~10px per frame), not where it ended up after the step
       const tt=b.y!==b.py?Math.max(0,Math.min(1,(GROUND-BR-b.py)/(b.y-b.py))):1;
       b.x=b.px+(b.x-b.px)*tt;
-      b.y=GROUND-BR;b.vy=-Math.abs(b.vy)*(b.cut?CUT_VY:.7);b.vx*=b.cut?CUT_VX:.88*(b.spin?SPIN_KICK:1);b.spin=0;b.cut=false;if(Math.abs(b.vy)<.6)b.vy=0;onBounce()}
+      b.y=GROUND-BR;b.vy=-Math.abs(b.vy)*(b.cut?CUT_VY:b.smash?SMASH_BOUNCE_VY:.7);b.vx*=b.cut?CUT_VX:b.smash?.88*SMASH_BOUNCE_VX:.88*(b.spin?SPIN_KICK:1);b.spin=0;b.cut=false;b.smash=false;if(Math.abs(b.vy)<.6)b.vy=0;onBounce()}
     if((b.x<-14-EXT||b.x>W+14+EXT)&&game.phase==="rally"){
       if(game.bounced)rallyOver(b.x<NETX?0:1,"沒接到！");else rallyOver(game.lastHitter,"出界！");
     }
