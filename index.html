@@ -151,25 +151,65 @@ text-transform:uppercase;
 color: rgba(248,244,238,0.55);
 margin-bottom:12px;
 }
-.gallery-grid{
+.gallery-viewport{
+position:relative;
+}
+.gallery-track{
+--slide-w: 96%;
+display:flex;
+gap:10px;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+-webkit-overflow-scrolling:touch;
+scrollbar-width:none;
+-ms-overflow-style:none;
+padding-block:2px;
+padding-inline: calc((100% - var(--slide-w)) / 2);
+margin:-2px;
+}
+.gallery-track::-webkit-scrollbar{ display:none; }
+.gallery-track .slide{
+flex:0 0 var(--slide-w);
+aspect-ratio: 1 / 1;
 border-radius:20px;
 overflow:hidden;
 border:1.5px solid rgba(248,244,238,0.25);
-}
-.gallery-grid a{
-display:block;
-aspect-ratio: 1 / 1;
-overflow:hidden;
 background: rgba(248,244,238,0.08);
+scroll-snap-align:center;
 }
-.gallery-grid img{
+.gallery-arrow{
+position:absolute;
+top:50%;
+transform:translateY(-50%);
+width:24px; height:24px;
+border-radius:50%;
+background: rgba(11,11,12,0.4);
+border:1px solid rgba(248,244,238,0.35);
+color: rgba(248,244,238,0.75);
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+z-index:3;
+transition: background .2s ease, opacity .2s ease;
+padding:0;
+opacity:.8;
+}
+.gallery-arrow:hover{ background: rgba(11,11,12,0.65); opacity:1; }
+.gallery-arrow:focus-visible{ outline:2px solid var(--paper); outline-offset:2px; }
+.gallery-arrow.prev{ left:6px; }
+.gallery-arrow.next{ right:6px; }
+.gallery-arrow svg{ width:11px; height:11px; }
+@media (hover:none) and (pointer:coarse){
+.gallery-arrow{ display:none; }
+}
+.gallery-track img{
 width:100%;
 height:100%;
 object-fit:cover;
 display:block;
-transition: transform .3s ease;
+pointer-events:none;
 }
-.gallery-grid a:hover img{ transform: scale(1.05); }
 
 .divider{
 position:relative; z-index:2;
@@ -275,7 +315,7 @@ footer{ padding: 20px 20px 26px; }
 <div class="mark-slot"><img src="logo.png" alt="Sweet Rabbit Man logo"></div>
 
 <h1 class="headline">Some Romantic Moment</h1>
-<p class="subtext">No schedule, no scoreboard — just a pace that never quits.<br>Throwback, court, half-tired and still moving.<br>The shape changes, the attitude stays.</p>
+<p class="subtext">Every day is for love and sweets.</p>
 
 <nav class="cta-row">
 <a class="pill outline" href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener" aria-label="Instagram">
@@ -289,11 +329,23 @@ footer{ padding: 20px 20px 26px; }
 </a>
 </nav>
 
-<!-- Gallery: drop gallery-1.jpg (square-ish crop works best) into the same folder as index.html to replace this -->
+<!-- Gallery: infinite-loop swipeable carousel, view-only (no links). Add/replace gallery-N.jpg files (square-ish crop works best) and add/remove .slide divs to match — script.js below handles looping/arrows automatically for however many slides are here. -->
 <div class="gallery">
 <div class="gallery-label">Gallery</div>
-<div class="gallery-grid">
-<a href="https://www.instagram.com/sweetrabbitman" target="_blank" rel="noopener"><img src="gallery-1.jpg" alt="Sweet Rabbit Man"></a>
+<div class="gallery-viewport">
+<button class="gallery-arrow prev" type="button" aria-label="Previous photo">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+</button>
+<div class="gallery-track">
+<div class="slide"><img src="gallery-1.jpg" alt="Sweet Rabbit Man photo 1"></div>
+<div class="slide"><img src="gallery-2.jpg" alt="Sweet Rabbit Man photo 2"></div>
+<div class="slide"><img src="gallery-3.jpg" alt="Sweet Rabbit Man photo 3"></div>
+<div class="slide"><img src="gallery-4.jpg" alt="Sweet Rabbit Man photo 4"></div>
+<div class="slide"><img src="gallery-5.jpg" alt="Sweet Rabbit Man photo 5"></div>
+</div>
+<button class="gallery-arrow next" type="button" aria-label="Next photo">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+</button>
 </div>
 </div>
 
@@ -311,5 +363,63 @@ footer{ padding: 20px 20px 26px; }
 <span>© 2026 Sweet Rabbit Man Official</span>
 </footer>
 </div>
+
+<script>
+(function(){
+  var track = document.querySelector('.gallery-track');
+  if(!track) return;
+  var realSlides = Array.prototype.slice.call(track.children);
+  if(realSlides.length < 2) return; // nothing to loop with only one photo
+
+  // clone first/last slide to each end so scrolling past an edge lands on a
+  // duplicate — then we silently jump back to the real slide (classic
+  // infinite-carousel trick)
+  var firstClone = realSlides[0].cloneNode(true);
+  var lastClone = realSlides[realSlides.length - 1].cloneNode(true);
+  firstClone.setAttribute('aria-hidden', 'true');
+  lastClone.setAttribute('aria-hidden', 'true');
+  track.insertBefore(lastClone, realSlides[0]);
+  track.appendChild(firstClone);
+
+  var total = realSlides.length; // count of real slides
+  // track.children is now [lastClone, ...real(1..total), firstClone]
+
+  function slideStep(){
+    var s = track.children[1];
+    var rect = s.getBoundingClientRect();
+    var style = getComputedStyle(track);
+    var gap = parseFloat(style.columnGap || style.gap || '0') || 0;
+    return rect.width + gap;
+  }
+
+  function goTo(i, smooth){
+    track.scrollTo({ left: slideStep() * i, behavior: smooth ? 'smooth' : 'auto' });
+  }
+
+  function currentIndex(){
+    return Math.round(track.scrollLeft / slideStep());
+  }
+
+  // start on the first real slide, no animation
+  requestAnimationFrame(function(){ goTo(1, false); });
+
+  var settleTimer;
+  track.addEventListener('scroll', function(){
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(function(){
+      var i = currentIndex();
+      if(i <= 0){ goTo(total, false); }
+      else if(i >= total + 1){ goTo(1, false); }
+    }, 120);
+  }, { passive: true });
+
+  var prevBtn = document.querySelector('.gallery-arrow.prev');
+  var nextBtn = document.querySelector('.gallery-arrow.next');
+  if(prevBtn) prevBtn.addEventListener('click', function(){ goTo(currentIndex() - 1, true); });
+  if(nextBtn) nextBtn.addEventListener('click', function(){ goTo(currentIndex() + 1, true); });
+
+  window.addEventListener('resize', function(){ goTo(currentIndex(), false); });
+})();
+</script>
 </body>
 </html>
