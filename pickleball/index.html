@@ -184,7 +184,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 <body>
 
 <div class="app">
-  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v19 · 2026-10-24</b></span></div>
+  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v20 · 2026-10-24</b></span></div>
 
   <div class="stage" id="stage">
     <canvas id="cv" width="432" height="288"></canvas>
@@ -2813,8 +2813,8 @@ function readInput(i){
 let mode="title";
 let twoP=false,paused=false,frame=0,blocked=false,pauseUI=false;
 let netRole=null; // null (offline) | "host" (runs the game, player 1) | "guest" (sends keys, draws what the host sends, player 2)
-const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0,rtt:null,path:"",statN:0,rxSeq:-1,rxSeqIn:-1,txSeq:0};
-const NET_VER="v19 · 2026-10-24".split(" · ")[0];
+const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0,rtt:null,path:"",statN:0,rxSeq:-1,rxSeqIn:-1,txSeq:0,hist:[],auth:null,ack:-1,q:[],cur:{},ackQ:-1,dispX:null,ex:EXT_MIN,sp:0,prevSw:false,lastPx:null};
+const NET_VER="v20 · 2026-10-24".split(" · ")[0];
 const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ultT:0,ai:{noise:0,letGo:false},matchDone:false};
 function newPlayer(i){return{i,x:i?342:90,y:GROUND,vx:0,vy:0,ground:true,face:i?-1:1,swingT:0,shot:"normal",cd:0,prevSwing:false,volleyGuard:0}}
 game.players=[newPlayer(0),newPlayer(1)];
@@ -3479,7 +3479,7 @@ function netJoin(code){
 }
 function netConn(c){
   c.on("open",()=>{
-    net.lastRx=performance.now();net.rtt=null;net.path="";net.statN=0;net.rxSeq=-1;net.rxSeqIn=-1;net.txSeq=0;
+    net.lastRx=performance.now();net.rtt=null;net.path="";net.statN=0;net.rxSeq=-1;net.rxSeqIn=-1;net.txSeq=0;net.hist=[];net.auth=null;net.ack=-1;net.q=[];net.cur={};net.ackQ=-1;net.dispX=null;net.sp=0;net.lastPx=null;
     c.send({t:"hello",v:NET_VER,cfg:cfg[0]});   // everyone plays online with their own saved look (MY LOOK)
     clearInterval(net.pingT);
     net.pingT=setInterval(()=>{
@@ -3504,7 +3504,7 @@ function netData(m){
       if(netRole)return;
       net.savedCfg=JSON.parse(JSON.stringify(cfg));
       cfg[1]=dedupeLook(cfg[0],other);rebuildSprites();
-      netRole="host";net.inp={};net.lat={};net.evts=[];
+      netRole="host";net.q=[];net.cur={};net.ackQ=-1;net.evts=[];
       startMatch();
     }else{
       if(netRole)return;
@@ -3519,19 +3519,24 @@ function netData(m){
     const r=performance.now()-m.ts;net.rtt=net.rtt==null?r:net.rtt*.6+r*.4;
   }else if(m.t==="in"&&netRole==="host"){
     if(m.q!=null){if(m.q<=net.rxSeqIn&&m.q>net.rxSeqIn-300)return;net.rxSeqIn=m.q}
-    const I=net.inp,L=net.lat;
-    I.left=!!m.l;I.right=!!m.r;I.jump=!!m.j;I.down=!!m.d;I.swing=!!m.s;
-    if(m.l)L.left=true;if(m.r)L.right=true;if(m.j)L.jump=true;if(m.d)L.down=true;if(m.s)L.swing=true;
+    net.q.push({q:m.q,l:!!m.l,r:!!m.r,j:!!m.j,d:!!m.d,s:!!m.s});if(net.q.length>30)net.q.shift();
   }else if(m.t==="s"&&netRole==="guest"){
     if(m.q<=net.rxSeq&&m.q>net.rxSeq-300)return;   // an old snapshot that arrived late
     net.rxSeq=m.q;applySnap(m)
   }
 }
-// the guest's keys as the host sees them: held keys plus any press that came and went between two host frames
+// the guest's keys as the host sees them: one received input per host frame, in order (so the guest can replay exactly the inputs the host hasn't used yet)
 function remoteInput(){
-  const I=net.inp,L=net.lat;
-  const o={left:!!(I.left||L.left),right:!!(I.right||L.right),jump:!!(I.jump||L.jump),down:!!(I.down||L.down),swing:!!(I.swing||L.swing)};
-  net.lat={};return o;
+  const c=net.cur;
+  if(net.q.length){
+    const m=net.q.shift();
+    while(net.q.length>3){const x=net.q.shift();m.s=m.s||x.s;m.j=m.j||x.j;m.l=x.l;m.r=x.r;m.d=x.d;m.q=x.q}   // backed up: merge so a quick tap isn't lost
+    c.sPrev=c.s;c.jPrev=c.j;Object.assign(c,m);net.ackQ=m.q;
+    return{left:c.l,right:c.r,jump:c.j,down:c.d,swing:c.s};
+  }
+  // nothing new arrived this frame: keep the held keys going, but never repeat a one-frame tap
+  c.sPrev=c.s;c.jPrev=c.j;
+  return{left:!!c.l,right:!!c.r,jump:!!(c.j&&c.jPrev),down:!!c.d,swing:!!(c.s&&c.sPrev)};
 }
 function sendSnap(){
   const c=net.conn;
@@ -3539,9 +3544,9 @@ function sendSnap(){
   if(mode!=="play"&&mode!=="over"){net.evts.length=0;return}
   const dc=c.dataChannel;
   if(dc&&dc.bufferedAmount>6000){net.evts.length=Math.min(net.evts.length,30);return}   // the link is backed up: skip this one instead of piling up delay
-  const P=p=>[r1(p.x),r1(p.y),r1(p.vx),p.face,p.swingT,p.held?1:0,p.hold||0,p.srv?1:0,p.shot];
+  const P=p=>[r1(p.x),r1(p.y),r1(p.vx),p.face,p.swingT,p.held?1:0,p.hold||0,p.srv?1:0,p.shot,r1(p.vy),p.run||0,p.runDir||0];
   const b=game.ball,s={t:"s",q:++net.txSeq,m:mode,P:[P(game.players[0]),P(game.players[1])],B:[r1(b.x),r1(b.y),r1(b.vx),r1(b.vy),b.ult?1:0],
-    sc:game.score,sv:game.server,ph:game.phase,u:game.ultT,ev:net.evts};
+    sc:game.score,sv:game.server,ph:game.phase,u:game.ultT,ev:net.evts,a:net.ackQ,ex:EXT};
   if(!$("banner").hidden)s.bn=[$("bnMain").textContent,$("bnSub").textContent];
   if(mode==="over"){s.ot=$("ovTitle").textContent;s.os=$("ovScore").textContent}
   net.evts=[];
@@ -3555,6 +3560,8 @@ function applySnap(m){
   }
   if(mode!=="play"&&mode!=="over")return;
   m.P.forEach((a,i)=>{const p=game.players[i];p.x=a[0];p.y=a[1];p.vx=a[2];p.face=a[3];p.swingT=a[4];p.held=!!a[5];p.hold=a[6];p.srv=!!a[7];p.shot=a[8];p.isAI=false;p.ground=a[1]>=GROUND});
+  const g=m.P[1];net.auth={x:g[0],y:g[1],vy:g[9]||0,ground:g[1]>=GROUND,run:g[10]||0,runDir:g[11]||0};net.ack=m.a;net.ex=m.ex||EXT_MIN;
+  net.hist=net.hist.filter(h=>h.q>net.ack);
   const b=game.ball;b.x=m.B[0];b.y=m.B[1];b.vx=m.B[2];b.vy=m.B[3];b.ult=!!m.B[4];
   const ph=game.phase,sv=game.server;
   game.score=m.sc;game.server=m.sv;game.phase=m.ph;game.ultT=m.u;
@@ -3567,10 +3574,38 @@ function applySnap(m){
     else if(e!=="sel"&&sfx[e])sfx[e]();
   }
 }
+// the guest predicts its OWN movement locally (so the player reacts at once instead of one round trip later), then corrects to what the host says
+// by re-playing the keys the host hasn't seen yet. Hits, the ball and the opponent always come from the host.
+function predStep(s,inp,ex,phase,server){
+  const lo=NETX+18,hi=W+ex-16;
+  const dir=(inp.right?1:0)-(inp.left?1:0);
+  const hold=phase==="serve"&&server===1;
+  if(dir===0||dir!==s.runDir||hold){s.run=0;s.runDir=dir}else s.run++;
+  const vx=hold?0:dir*Math.min(SPEED,RUN_START+s.run*RUN_ACCEL);
+  s.x=Math.max(lo,Math.min(hi,s.x+vx));
+  if(inp.jump&&s.ground&&!hold){s.vy=-JUMP;s.ground=false}
+  if(!s.ground){s.vy+=G_P;s.y+=s.vy;if(s.y>=GROUND){s.y=GROUND;s.vy=0;s.ground=true}}
+}
 function guestStep(){
   const inp=readInput(0);tapped.clear();
   const c=net.conn;
-  if(mode==="play"&&c&&c.open)try{c.send({t:"in",q:++net.txSeq,l:+inp.left,r:+inp.right,j:+inp.jump,d:+inp.down,s:+inp.swing})}catch(e){}
+  if(mode==="play"&&c&&c.open){
+    const q=++net.txSeq;
+    try{c.send({t:"in",q,l:+inp.left,r:+inp.right,j:+inp.jump,d:+inp.down,s:+inp.swing})}catch(e){}
+    net.hist.push({q,left:inp.left,right:inp.right,jump:inp.jump});if(net.hist.length>40)net.hist.shift();
+    if(inp.swing&&!net.prevSw&&game.players[1].swingT<=0)net.sp=14;   // show the swing at once
+    net.prevSw=inp.swing;
+  }
+  if(net.sp>0)net.sp--;
+  if(mode==="play"&&net.auth){
+    const s=Object.assign({},net.auth);
+    for(const h of net.hist)if(h.q>net.ack)predStep(s,h,net.ex,game.phase,game.server);
+    const p=game.players[1];
+    p.vx=net.lastPx==null?0:s.x-net.lastPx;net.lastPx=s.x;
+    if(net.dispX==null||Math.abs(s.x-net.dispX)>24)net.dispX=s.x;else net.dispX+=(s.x-net.dispX)*.55;   // soften small corrections
+    p.x=net.dispX;p.y=s.y;p.vy=s.vy;p.ground=s.ground;
+    if(net.sp>p.swingT)p.swingT=net.sp;
+  }
   const b=game.ball;
   if((mode==="play"||mode==="over")&&(Math.hypot(b.vx,b.vy)>5.4||b.ult))game.trail.push({x:b.x,y:b.y,t:b.ult?10:6,ult:!!b.ult});
   game.trail.forEach(t=>t.t--);game.trail=game.trail.filter(t=>t.t>0);
@@ -3586,8 +3621,11 @@ function netPath(c){
       rep.forEach(r=>{if(r.type==="candidate-pair"&&(r.selected||(r.nominated&&r.state==="succeeded")))pair=r});
       if(!pair)return;
       const a=cand[pair.localCandidateId],b=cand[pair.remoteCandidateId];
+      const priv=c=>{if(!c)return false;const ad=c.address||c.ip||"";
+        return(c.candidateType==="host"&&!ad)||/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|f[cd][0-9a-f]{2}:|fe80)/i.test(ad)||/\.local$/i.test(ad)};
       const ty=[a&&a.candidateType,b&&b.candidateType];
-      net.path=ty.includes("relay")?"relay":(ty[0]==="host"&&ty[1]==="host")?"lan":"nat";
+      net.path=ty.includes("relay")?"relay":(priv(a)&&priv(b))?"lan":"nat";
+      net.kinds=ty.join("/");
     }).catch(()=>{});
   }catch(e){}
 }
@@ -3597,7 +3635,7 @@ function netStatShow(){
   const ms=net.rtt==null?null:Math.round(net.rtt);
   const label=net.path==="relay"?"中繼（很慢）":net.path==="lan"?"區網直連":net.path==="nat"?"經路由器":"連線中";
   const bad=net.path==="relay"||(ms!=null&&ms>100),ok=!bad&&((ms!=null&&ms>40)||net.path==="nat");
-  el.className="netstat "+(bad?"bad":ok?"ok":"good");
+  el.className="netstat "+(bad?"bad":ok?"ok":"good");el.title=net.kinds||"";
   el.innerHTML=`<i>●</i> ${label}${ms!=null?` ${ms}ms`:""}`;el.hidden=false;
 }
 function netLeave(){
