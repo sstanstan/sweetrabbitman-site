@@ -126,7 +126,7 @@ body.tplay.land .tc > *, body.tplay.land .tc .set > *{pointer-events:auto}
 .tc #muteT{right:var(--edgeR)}
 .tc .set0 .dpad{left:var(--edge);bottom:max(26px,env(safe-area-inset-bottom,0px))}
 .tc .set0 .abtn.b{right:calc(var(--edgeR) + var(--ab) + 18px);bottom:16px}
-.tc .set0 .abtn.a{right:var(--edgeR);bottom:calc(16px + var(--ab)*.62)}
+.tc .set0 .abtn.a{right:var(--edgeR);bottom:16px}
 /* 2P: P1 owns the left edge, P2 the right edge */
 body.two .tc{--dp:min(34vh,140px);--ab:min(15vh,64px)}
 body.two .tc .set0 .abtn.b{left:var(--edge);right:auto;bottom:calc(30px + var(--dp) + 8px)}
@@ -138,7 +138,7 @@ body.two .tc .set0 .abtn.a{left:calc(var(--edge) + var(--ab) + 12px);right:auto;
 .tc .set1 .tag{right:var(--edgeR);top:62px;color:var(--sky)}
 body:not(.two) .tc .tag{display:none}
 body.land .tc .set0 .dpad{bottom:auto;top:calc(52% - var(--dp)*.62)}
-body.land .tc .set0 .abtn.a{bottom:auto;top:calc(52% - var(--ab)*1.32)}
+body.land .tc .set0 .abtn.a{bottom:auto;top:calc(52% - var(--ab)*.87)}
 body.land .tc .set0 .abtn.b{bottom:auto;top:calc(52% - var(--ab)*.42)}
 body.land.two .tc{--dp:min(31vh,124px);--ab:min(14.5vh,58px)}
 body.land.two .tc .set0 .abtn.b{left:var(--edge);top:15vh}
@@ -184,7 +184,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 <body>
 
 <div class="app">
-  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v20 · 2026-10-24</b></span></div>
+  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v21 · 2026-10-24</b></span></div>
 
   <div class="stage" id="stage">
     <canvas id="cv" width="432" height="288"></canvas>
@@ -2814,7 +2814,7 @@ let mode="title";
 let twoP=false,paused=false,frame=0,blocked=false,pauseUI=false;
 let netRole=null; // null (offline) | "host" (runs the game, player 1) | "guest" (sends keys, draws what the host sends, player 2)
 const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0,rtt:null,path:"",statN:0,rxSeq:-1,rxSeqIn:-1,txSeq:0,hist:[],auth:null,ack:-1,q:[],cur:{},ackQ:-1,dispX:null,ex:EXT_MIN,sp:0,prevSw:false,lastPx:null};
-const NET_VER="v20 · 2026-10-24".split(" · ")[0];
+const NET_VER="v21 · 2026-10-24".split(" · ")[0];
 const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ultT:0,ai:{noise:0,letGo:false},matchDone:false};
 function newPlayer(i){return{i,x:i?342:90,y:GROUND,vx:0,vy:0,ground:true,face:i?-1:1,swingT:0,shot:"normal",cd:0,prevSwing:false,volleyGuard:0}}
 game.players=[newPlayer(0),newPlayer(1)];
@@ -3370,7 +3370,6 @@ function buildTouch(){
     box.innerHTML=`<span class="tag">${i?"P2":"P1"}</span>
       <div class="dpad"><span class="arm h"></span><span class="arm v"></span><span class="hub"></span><span class="hl l"></span><span class="hl r"></span><span class="hl u"></span><span class="hl d"></span>
         <span class="tri l">◀</span><span class="tri r">▶</span><span class="tri u">▲</span><span class="tri d">▼</span><span class="cap">▲跳　▼小球　跳＋揮＝扣殺</span></div>
-      <button class="abtn b" data-k="jump" type="button">B<small>跳</small></button>
       <button class="abtn a" data-k="swing" type="button">A<small>揮拍</small></button>`;
     const pad=box.querySelector(".dpad");let pid=null,lastV=0;
     const set=(l,r,u,d)=>{touch[i].left=l;touch[i].right=r;touch[i].jump=u;touch[i].down=d;
