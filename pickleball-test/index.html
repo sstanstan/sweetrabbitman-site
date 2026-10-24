@@ -182,7 +182,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 <body>
 
 <div class="app">
-  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v15 · 2026-10-24</b></span></div>
+  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v17 · 2026-10-24</b></span></div>
 
   <div class="stage" id="stage">
     <canvas id="cv" width="432" height="288"></canvas>
@@ -194,7 +194,8 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
       <div class="menu" id="titleMenu">
         <button id="m1" class="sel">1P START<small>和電腦打</small></button>
         <button id="m2">2P START<small>兩人對打</small></button>
-        <button id="m3">ONLINE<small>線上對戰</small></button>
+        <button id="m3">WIFI<small>wifi 連線對戰</small></button>
+        <button id="m4">MY LOOK<small>設定我的造型</small></button>
       </div>
     </div>
 
@@ -253,15 +254,15 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
   </section>
 
   <section class="panel" id="setupPanel" hidden>
-    <h2>選擇造型</h2>
+    <h2 id="setTitle">選擇造型</h2>
     <div class="cards" id="cards"></div>
-    <p class="note">P1 用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色；P2 用方向鍵。也可以直接點。上方畫面會即時顯示。</p>
+    <p class="note" id="setNote">P1 用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色；P2 用方向鍵。也可以直接點。上方畫面會即時顯示。</p>
     <button class="go" id="goBtn">開始比賽 ▶</button>
   </section>
 
   <section class="panel" id="lobbyPanel" hidden>
-    <h2>線上對戰</h2>
-    <p class="note">兩個人各用自己的裝置連線對打。連同一個 wifi 最順。造型：房主用 P1 的造型、加入的人用 P2 的造型（在 1P／2P START 的造型畫面設定）。房主在左邊、對手在右邊。</p>
+    <h2>wifi 連線對戰</h2>
+    <p class="note">兩個人各用自己的裝置連線對打。連同一個 wifi 最順。兩邊都用自己在「MY LOOK」設好的造型（下面可以直接去設定）。房主在左邊、對手在右邊。</p>
     <div class="lb-menu" id="lbMenu">
       <button class="go" id="lbHost" type="button">建立房間</button>
       <div class="lb-join"><label for="lbCode">或輸入房間號</label><input id="lbCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7QX"><button class="go" id="lbJoin" type="button">加入</button></div>
@@ -279,7 +280,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
       <p class="note" id="lbWait">等待對手加入…（這個分頁要留在前景，不然對方會卡住）</p>
     </div>
     <p class="note" id="lbMsg"></p>
-    <button class="go ghost" id="lbBack" type="button">返回標題</button>
+    <div class="lb-menu"><button class="go ghost" id="lbLook" type="button">設定我的造型</button><button class="go ghost" id="lbBack" type="button">返回標題</button></div>
   </section>
 
   <section class="panel" id="playPanel" hidden>
@@ -2637,7 +2638,22 @@ const DEFAULT_CFG=[{char:0,cloth:0,shorts:0,skin:1,paddle:0},{char:1,cloth:1,sho
 const CFG_KEY="srm-pickle-cfg3";
 let cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));
 try{const s=JSON.parse(localStorage.getItem(CFG_KEY)||"null"); if(Array.isArray(s)&&s.length===2) cfg=s.map((c,i)=>Object.assign({},DEFAULT_CFG[i],c));}catch(e){}
-function saveCfg(){try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}catch(e){}}
+let cpuHold=null,lookOnly=false,setupBack="title"; // cpuHold: P2's saved look while the computer wears a random one
+function saveCfg(){try{localStorage.setItem(CFG_KEY,JSON.stringify(cpuHold?[cfg[0],cpuHold]:cfg))}catch(e){}}
+// the computer gets a random look every match (never saved)
+function randomLook(avoid){
+  const ri=n=>Math.floor(Math.random()*n);
+  let l;
+  do{l={char:ri(2),cloth:ri(9),shorts:ri(8),skin:ri(9),paddle:ri(8)}}while(avoid&&l.char===avoid.char&&l.cloth===avoid.cloth);
+  return l;
+}
+function cpuSwap(){if(!cpuHold)cpuHold=cfg[1];cfg[1]=randomLook(cfg[0]);rebuildSprites()}
+function cpuRestore(){if(cpuHold){cfg[1]=cpuHold;cpuHold=null;rebuildSprites()}}
+// online: if both players picked the very same look, the joiner's clothes are shifted one colour so you can tell them apart (both sides compute the same result)
+function dedupeLook(host,guest){
+  const same=["char","cloth","shorts","skin","paddle"].every(k=>host[k]===guest[k]);
+  return same?Object.assign({},guest,{cloth:(guest.cloth+1)%9}):guest;
+}
 
 // ---------- sprites ----------
 function hex2rgb(h){const n=parseInt(h.slice(1),16);return[n>>16&255,n>>8&255,n&255]}
@@ -2795,17 +2811,18 @@ let mode="title";
 let twoP=false,paused=false,frame=0,blocked=false,pauseUI=false;
 let netRole=null; // null (offline) | "host" (runs the game, player 1) | "guest" (sends keys, draws what the host sends, player 2)
 const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0};
-const NET_VER="v15 · 2026-10-24".split(" · ")[0];
+const NET_VER="v17 · 2026-10-24".split(" · ")[0];
 const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ultT:0,ai:{noise:0,letGo:false},matchDone:false};
 function newPlayer(i){return{i,x:i?342:90,y:GROUND,vx:0,vy:0,ground:true,face:i?-1:1,swingT:0,shot:"normal",cd:0,prevSwing:false,volleyGuard:0}}
 game.players=[newPlayer(0),newPlayer(1)];
 
-const nameOf=i=>{const n=CHARS[cfg[i].char][1];return cfg[0].char===cfg[1].char?`${n} ${i?"2P":"1P"}`:n};
+const nameOf=i=>{const n=CHARS[cfg[i].char][1];return cfg[0].char===cfg[1].char?`${n} ${i?(twoP||netRole?"2P":"CPU"):"1P"}`:n};
 const inKitchen=p=>Math.abs(p.x-NETX)<KITCHEN;
 const callScore=()=>`${game.score[game.server]}-${game.score[1-game.server]}`;
 const serveSide=()=>game.score[game.server]%2===0?"右區":"左區";
 
 function startMatch(){
+  if(!twoP&&!netRole&&!cpuHold)cpuSwap();
   game.score=[0,0];game.server=0;game.sparks=[];game.matchDone=false;
   paused=false;setupServe();setMode("play");
   if(isTouch){try{const el=document.documentElement;const r=el.requestFullscreen&&el.requestFullscreen();
@@ -3202,6 +3219,7 @@ let portraitOK=false;
 function setMode(m){
   mode=m;
   if(m==="title"||m==="setup")netLeave();
+  if(m!=="play"&&m!=="over")cpuRestore();
   pauseUI=false;
   $("title").hidden=!(m==="title"||m==="lobby");
   $("lobbyPanel").hidden=m!=="lobby";
@@ -3214,7 +3232,7 @@ function setMode(m){
   $("playPanel").hidden=!(m==="play"||m==="over");
   if(m==="title"){game.players=[newPlayer(0),newPlayer(1)];game.trail=[];menuFocus(titleBtns,0)}
   if(m==="lobby"){game.players=[newPlayer(0),newPlayer(1)];game.trail=[];lobbyShow()}
-  if(m==="setup"){buildSetup();game.trail=[]}
+  if(m==="setup"){if(!twoP&&!lookOnly)cpuSwap();buildSetup();game.trail=[]}
   if(m==="play"){buildTouch();showHint()}
   if(m==="over"){$("oAgain").hidden=netRole==="guest";$("oSetup").hidden=!!netRole;menuFocus(overList(),0)}
   applyLayout();
@@ -3246,17 +3264,18 @@ addEventListener("resize",()=>{if(mode==="play"||mode==="over")applyLayout()});
 addEventListener("orientationchange",()=>setTimeout(applyLayout,120));
 $("portraitOk").addEventListener("click",()=>{portraitOK=true;applyLayout()});
 
-const titleBtns=[$("m1"),$("m2"),$("m3")],overBtns=[$("oAgain"),$("oSetup"),$("oTitle")],pauseBtns=[$("pResume"),$("pQuit")];
+const titleBtns=[$("m1"),$("m2"),$("m3"),$("m4")],overBtns=[$("oAgain"),$("oSetup"),$("oTitle")],pauseBtns=[$("pResume"),$("pQuit")];
 const overList=()=>overBtns.filter(b=>!b.hidden);
 let menuIdx=0;
 function menuFocus(list,i){menuIdx=(i+list.length)%list.length;list.forEach((b,j)=>b.classList.toggle("sel",j===menuIdx))}
 titleBtns.forEach((b,i)=>b.addEventListener("mouseenter",()=>menuFocus(titleBtns,i)));
 overBtns.forEach((b,i)=>b.addEventListener("mouseenter",()=>menuFocus(overBtns,i)));
 pauseBtns.forEach((b,i)=>b.addEventListener("mouseenter",()=>menuFocus(pauseBtns,i)));
-$("m1").addEventListener("click",()=>{ensureAudio();twoP=false;sfx.sel();setMode("setup")});
-$("m2").addEventListener("click",()=>{ensureAudio();twoP=true;sfx.sel();setMode("setup")});
+$("m1").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=false;sfx.sel();setMode("setup")});
+$("m2").addEventListener("click",()=>{ensureAudio();twoP=true;lookOnly=false;sfx.sel();setMode("setup")});
 $("m3").addEventListener("click",()=>{ensureAudio();twoP=false;sfx.sel();setMode("lobby")});
-$("oAgain").addEventListener("click",()=>{if(netRole==="guest")return;startMatch()});
+$("m4").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=true;setupBack="title";sfx.sel();setMode("setup")});
+$("oAgain").addEventListener("click",()=>{if(netRole==="guest")return;if(!twoP&&!netRole)cpuSwap();startMatch()});
 $("oSetup").addEventListener("click",()=>setMode("setup"));
 $("oTitle").addEventListener("click",()=>setMode("title"));
 $("pResume").addEventListener("click",()=>togglePause(false));
@@ -3289,10 +3308,14 @@ const ROWS=[["角色","char",CHARS],["衣服","cloth",CLOTHES],["褲子","shorts
 const rowCur=[0,0];
 function buildSetup(){
   const wrap=$("cards");wrap.innerHTML="";
+  $("setTitle").textContent=lookOnly?"我的造型":"選擇造型";
+  $("goBtn").textContent=lookOnly?"儲存並返回 ◀":"開始比賽 ▶";
+  $("setNote").innerHTML=lookOnly?"改了就會自動儲存，之後和電腦對打、wifi 連線對戰都用這組造型。用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色，也可以直接點。":twoP?"P1 用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色；P2 用方向鍵。也可以直接點。上方畫面會即時顯示。":"用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色，也可以直接點。電腦的造型每一場都會隨機產生。";
   [0,1].forEach(i=>{
+    if(i===1&&!twoP)return;   // vs the computer / look-only: only your own card (the computer's look is random)
     const card=document.createElement("div");card.className="card";card.dataset.p=i;
-    const who=i===0?"P1":(twoP?"P2":"CPU");
-    const hint=i===0?"WASD":(twoP?"方向鍵":"電腦對手");
+    const who=i===0?(lookOnly?"MY LOOK":"P1"):"P2";
+    const hint=i===0?"WASD":"方向鍵";
     card.innerHTML=`<h3>${who}<span>${hint}</span></h3>`;
     ROWS.forEach(([lab,key,list],r)=>{
       const row=document.createElement("div");row.className="row";row.dataset.r=r;
@@ -3332,7 +3355,7 @@ function setupKey(code){
   const [,key,list]=ROWS[rowCur[i]];
   cfg[i][key]=(cfg[i][key]+(a==="r"?1:-1)+list.length)%list.length;onCfg();
 }
-$("goBtn").addEventListener("click",()=>{ensureAudio();startMatch()});
+$("goBtn").addEventListener("click",()=>{ensureAudio();if(lookOnly){saveCfg();sfx.sel();setMode(setupBack);return}startMatch()});
 
 // ---------- on-screen touch controls ----------
 // D-pad: left/right move, down = dink (smash in the air), up = jump. A = swing, B = jump.
@@ -3453,7 +3476,7 @@ function netJoin(code){
 function netConn(c){
   c.on("open",()=>{
     net.lastRx=performance.now();
-    c.send({t:"hello",v:NET_VER,cfg:net.role==="host"?cfg[0]:cfg[1]});   // host plays with its P1 look, guest with its P2 look
+    c.send({t:"hello",v:NET_VER,cfg:cfg[0]});   // everyone plays online with their own saved look (MY LOOK)
     clearInterval(net.pingT);
     net.pingT=setInterval(()=>{
       if(net.conn!==c){clearInterval(net.pingT);return}
@@ -3474,13 +3497,14 @@ function netData(m){
     if(net.role==="host"){
       if(netRole)return;
       net.savedCfg=JSON.parse(JSON.stringify(cfg));
-      cfg[1]=other;rebuildSprites();
+      cfg[1]=dedupeLook(cfg[0],other);rebuildSprites();
       netRole="host";net.inp={};net.lat={};net.evts=[];
       startMatch();
     }else{
       if(netRole)return;
       net.savedCfg=JSON.parse(JSON.stringify(cfg));
-      cfg[0]=Object.assign({},DEFAULT_CFG[0],m.cfg||{});rebuildSprites();
+      const mine=cfg[0],hostLook=Object.assign({},DEFAULT_CFG[0],m.cfg||{});
+      cfg[0]=hostLook;cfg[1]=dedupeLook(hostLook,mine);rebuildSprites();
       netRole="guest";
     }
   }else if(m.t==="in"&&netRole==="host"){
@@ -3557,6 +3581,7 @@ $("lbJoin").addEventListener("click",()=>{
 });
 $("lbCode").addEventListener("keydown",e=>{if(e.key==="Enter")$("lbJoin").click()});
 $("lbBack").addEventListener("click",()=>setMode("title"));
+$("lbLook").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=true;setupBack="lobby";setMode("setup")});
 $("lbCopy").addEventListener("click",()=>{
   const el=$("lbUrl"),done=()=>{$("lbCopy").textContent="已複製 ✓";setTimeout(()=>{$("lbCopy").textContent="複製網址"},1600)};
   const fallback=()=>{el.focus();el.select();try{document.execCommand("copy");done()}catch(e){lbMsg("請手動複製上面的網址。")}};
