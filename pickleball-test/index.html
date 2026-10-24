@@ -182,7 +182,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 <body>
 
 <div class="app">
-  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v17 · 2026-10-24</b></span></div>
+  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v18 · 2026-10-24</b></span></div>
 
   <div class="stage" id="stage">
     <canvas id="cv" width="432" height="288"></canvas>
@@ -210,7 +210,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 
     <div class="ov" id="over" hidden>
       <div class="box"><h2 id="ovTitle">WIN!</h2><p id="ovScore"></p>
-        <div class="menu"><button id="oAgain" class="sel">再來一局</button><button id="oSetup">換造型</button><button id="oTitle">回到標題</button></div>
+        <div class="menu"><button id="oAgain" class="sel">再來一局</button><button id="oSetup" hidden>換造型</button><button id="oTitle">回到標題</button></div>
       </div>
     </div>
 
@@ -2811,7 +2811,7 @@ let mode="title";
 let twoP=false,paused=false,frame=0,blocked=false,pauseUI=false;
 let netRole=null; // null (offline) | "host" (runs the game, player 1) | "guest" (sends keys, draws what the host sends, player 2)
 const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0};
-const NET_VER="v17 · 2026-10-24".split(" · ")[0];
+const NET_VER="v18 · 2026-10-24".split(" · ")[0];
 const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ultT:0,ai:{noise:0,letGo:false},matchDone:false};
 function newPlayer(i){return{i,x:i?342:90,y:GROUND,vx:0,vy:0,ground:true,face:i?-1:1,swingT:0,shot:"normal",cd:0,prevSwing:false,volleyGuard:0}}
 game.players=[newPlayer(0),newPlayer(1)];
@@ -3234,7 +3234,7 @@ function setMode(m){
   if(m==="lobby"){game.players=[newPlayer(0),newPlayer(1)];game.trail=[];lobbyShow()}
   if(m==="setup"){if(!twoP&&!lookOnly)cpuSwap();buildSetup();game.trail=[]}
   if(m==="play"){buildTouch();showHint()}
-  if(m==="over"){$("oAgain").hidden=netRole==="guest";$("oSetup").hidden=!!netRole;menuFocus(overList(),0)}
+  if(m==="over"){$("oAgain").hidden=netRole==="guest";$("oSetup").hidden=true;menuFocus(overList(),0)}
   applyLayout();
 }
 // phone layout: landscape = full-screen court with on-screen buttons; portrait = ask to rotate
@@ -3271,8 +3271,8 @@ function menuFocus(list,i){menuIdx=(i+list.length)%list.length;list.forEach((b,j
 titleBtns.forEach((b,i)=>b.addEventListener("mouseenter",()=>menuFocus(titleBtns,i)));
 overBtns.forEach((b,i)=>b.addEventListener("mouseenter",()=>menuFocus(overBtns,i)));
 pauseBtns.forEach((b,i)=>b.addEventListener("mouseenter",()=>menuFocus(pauseBtns,i)));
-$("m1").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=false;sfx.sel();setMode("setup")});
-$("m2").addEventListener("click",()=>{ensureAudio();twoP=true;lookOnly=false;sfx.sel();setMode("setup")});
+$("m1").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=false;sfx.sel();startMatch()});   // looks are all set in MY LOOK, go straight to the match
+$("m2").addEventListener("click",()=>{ensureAudio();twoP=true;lookOnly=false;sfx.sel();startMatch()});
 $("m3").addEventListener("click",()=>{ensureAudio();twoP=false;sfx.sel();setMode("lobby")});
 $("m4").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=true;setupBack="title";sfx.sel();setMode("setup")});
 $("oAgain").addEventListener("click",()=>{if(netRole==="guest")return;if(!twoP&&!netRole)cpuSwap();startMatch()});
@@ -3308,14 +3308,14 @@ const ROWS=[["角色","char",CHARS],["衣服","cloth",CLOTHES],["褲子","shorts
 const rowCur=[0,0];
 function buildSetup(){
   const wrap=$("cards");wrap.innerHTML="";
-  $("setTitle").textContent=lookOnly?"我的造型":"選擇造型";
-  $("goBtn").textContent=lookOnly?"儲存並返回 ◀":"開始比賽 ▶";
-  $("setNote").innerHTML=lookOnly?"改了就會自動儲存，之後和電腦對打、wifi 連線對戰都用這組造型。用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色，也可以直接點。":twoP?"P1 用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色；P2 用方向鍵。也可以直接點。上方畫面會即時顯示。":"用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色，也可以直接點。電腦的造型每一場都會隨機產生。";
+  $("setTitle").textContent="我的造型";
+  $("goBtn").textContent="儲存並返回 ◀";
+  $("setNote").innerHTML="改了就會自動儲存，進到遊戲後不用再選造型。左邊這組（P1）用來和電腦對打、wifi 連線對戰；2P 那組只在「2P START」兩個人共用一台電腦時用。電腦對手的造型每場隨機。用 <kbd>W</kbd><kbd>S</kbd> 選項目、<kbd>A</kbd><kbd>D</kbd> 換顏色（2P 用方向鍵），也可以直接點。";
   [0,1].forEach(i=>{
-    if(i===1&&!twoP)return;   // vs the computer / look-only: only your own card (the computer's look is random)
+    // two cards: yours (used vs the computer and for wifi play) and 2P (only for two people on one computer)
     const card=document.createElement("div");card.className="card";card.dataset.p=i;
-    const who=i===0?(lookOnly?"MY LOOK":"P1"):"P2";
-    const hint=i===0?"WASD":"方向鍵";
+    const who=i===0?"MY LOOK · P1":"2P";
+    const hint=i===0?"WASD · 對電腦／wifi 連線用":"方向鍵 · 兩人同機對打用";
     card.innerHTML=`<h3>${who}<span>${hint}</span></h3>`;
     ROWS.forEach(([lab,key,list],r)=>{
       const row=document.createElement("div");row.className="row";row.dataset.r=r;
@@ -3339,7 +3339,7 @@ function syncSetup(){
     ROWS.forEach(([,key,list],r)=>{
       list.forEach((o,k)=>{const b=$(`p${i}-${key}-${k}`);if(b)b.setAttribute("aria-pressed",cfg[i][key]===k?"true":"false")});
       const row=document.querySelector(`.card[data-p="${i}"] .row[data-r="${r}"]`);
-      if(row)row.classList.toggle("cur",rowCur[i]===r&&(i===0||twoP));
+      if(row)row.classList.toggle("cur",rowCur[i]===r&&true);
     });
   });
 }
@@ -3350,7 +3350,6 @@ function setupKey(code){
   if(code==="Escape"){setMode("title");return}
   const m=map[code];if(!m)return;
   let [i,a]=m;
-  if(i===1&&!twoP)i=0;
   if(a==="u"||a==="d"){rowCur[i]=(rowCur[i]+(a==="d"?1:-1)+ROWS.length)%ROWS.length;syncSetup();sfx.sel();return}
   const [,key,list]=ROWS[rowCur[i]];
   cfg[i][key]=(cfg[i][key]+(a==="r"?1:-1)+list.length)%list.length;onCfg();
