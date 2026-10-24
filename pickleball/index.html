@@ -170,7 +170,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 <body>
 
 <div class="app">
-  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v13 · 2026-10-16</b></span></div>
+  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v14 · 2026-10-24</b></span></div>
 
   <div class="stage" id="stage">
     <canvas id="cv" width="432" height="288"></canvas>
@@ -225,7 +225,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
       <div><strong style="color:var(--sky)">P2 · 右邊</strong>
         <span><kbd>←</kbd> <kbd>→</kbd> 移動　<kbd>↑</kbd> 跳　<kbd>ENTER</kbd> 揮拍</span></div>
       <div><strong style="color:var(--lime)">球路</strong>
-        <span>揮拍時按住：往前＝上旋抽球、往後＝高吊、下＝放小球；跳起來揮拍一律是扣殺。擊球瞬間按住上／下還會微調弧線高低；力道只看揮拍鍵：輕點＝短球；按住會蓄力（頭上有蓄力條），球進範圍時就用當下的力道打出去，蓄越久球越遠越快。發球也能蓄力：按住蓄力、放開發球，輕點＝短發球、蓄滿＝發深（往前再深一點、往後再短一點）。</span></div>
+        <span>揮拍時按住：往前＝上旋抽球、往後＝高吊、下＝放小球；跳起來揮拍一律是扣殺；在跳到最高點的那一瞬間揮拍＝必殺技（超快、對手一定接不到）。擊球瞬間按住上／下還會微調弧線高低；力道只看揮拍鍵：輕點＝短球；按住會蓄力（頭上有蓄力條），球進範圍時就用當下的力道打出去，蓄越久球越遠越快。發球也能蓄力：按住蓄力、放開發球，輕點＝短發球、蓄滿＝發深（往前再深一點、往後再短一點）。</span></div>
     </div>
     <h2>匹克球單打規則</h2>
     <ul class="rules">
@@ -413,7 +413,7 @@ function ensureAudio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAud
 function tone(f,d,type="square",v=.06,slide=0){if(muted||!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;
   if(slide)o.frequency.linearRampToValueAtTime(f+slide,AC.currentTime+d);g.gain.value=v;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g).connect(AC.destination);o.start();o.stop(AC.currentTime+d)}
 const sfx={hit:()=>tone(660,.07,"square",.07,220),smash:()=>tone(880,.12,"sawtooth",.06,-500),bounce:()=>tone(180,.05,"triangle",.09),net:()=>tone(120,.09,"square",.05),
-  point:()=>{tone(523,.1);setTimeout(()=>tone(784,.14),110)},fault:()=>{tone(220,.12,"square",.06,-80)},win:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.16),i*130))},sel:()=>tone(440,.04,"square",.04)};
+  point:()=>{tone(523,.1);setTimeout(()=>tone(784,.14),110)},fault:()=>{tone(220,.12,"square",.06,-80)},win:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.16),i*130))},sel:()=>tone(440,.04,"square",.04),ult:()=>{tone(300,.25,"sawtooth",.08,900);setTimeout(()=>tone(1320,.18,"square",.07,-600),120)}};
 
 // ---------- input ----------
 const keys=new Set(),tapped=new Set(); // tapped: keys pressed since the last frame, so a very quick tap still counts
@@ -445,7 +445,7 @@ function readInput(i){
 // ---------- game state ----------
 let mode="title";
 let twoP=false,paused=false,frame=0,blocked=false;
-const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ai:{noise:0,letGo:false},matchDone:false};
+const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ultT:0,ai:{noise:0,letGo:false},matchDone:false};
 function newPlayer(i){return{i,x:i?342:90,y:GROUND,vx:0,vy:0,ground:true,face:i?-1:1,swingT:0,shot:"normal",cd:0,prevSwing:false,volleyGuard:0}}
 game.players=[newPlayer(0),newPlayer(1)];
 
@@ -484,7 +484,7 @@ function serve(p,inp,sp){
   const b=game.ball;
   const fwd=p.face>0?inp.right:inp.left,back=p.face>0?inp.left:inp.right;
   let vx=(4.6+(fwd?0.3:0)-(back?0.3:0)+(Math.random()-.5)*0.25)*(sp||1);
-  p.swingT=14;b.vx=p.face*vx;b.vy=-6.2;b.spin=0;b.cut=false;b.smash=false;
+  p.swingT=14;b.vx=p.face*vx;b.vy=-6.2;b.spin=0;b.cut=false;b.smash=false;b.ult=false;
   game.lastHitter=p.i;game.hits=1;game.bounced=false;game.netTouch=false;game.phase="rally";p.cd=16;
   afterHit(p.i);
   sfx.hit();spark(b.x,b.y);$("hint").hidden=true;
@@ -507,6 +507,8 @@ function rallyOver(loser,reason){
 }
 
 const SMASH_VX=7.2,SMASH_BOUNCE_VX=1.38,SMASH_BOUNCE_VY=.85;   // smash: faster, and after landing it kicks forward hard (hard to catch up with)
+// ULTIMATE (必殺技): a smash swung at the very top of the jump (|vy|<=ULT_VY). Super fast, steepest angle that still lands in court, and the opponent can't touch it.
+const ULT_VY=1.1,ULT_MIN_H=30,ULT_VX=11.5;
 const SHOTS={smash:[SMASH_VX,1.1],dink:[1.9,-3.8],lob:[3.1,-7.4],drive:[5.8,-5.2],normal:[4.45,-5.5]};
 // is it legal for p to hit the ball right now?
 function hitLegality(p){
@@ -517,6 +519,7 @@ function hitLegality(p){
 // Topspin drive: charge sets how deep the ball lands (tap = just past the kitchen, full charge = just inside the baseline);
 // the dive (extra downward pull after the net) is solved per shot so a hard, fast drive still drops into the court instead of flying out.
 const DRIVE_NEAR=45,DRIVE_FAR=172,DRIVE_DIVE_MAX=1.1; // landing depth from the net: tap .. full charge (px); strongest allowed dive
+function landX(x,y,vx,vy,face,gs){for(let k=0;k<400;k++){vy+=G_BALL+((face>0?x>NETX:x<NETX)?gs:0);x+=vx;y+=vy;if(y+BR>=GROUND)break}return x}
 function driveDive(x,y,vx,vy,face,targetX){
   const land=gs=>{let xx=x,yy=y,a=vx,v=vy;for(let k=0;k<400;k++){v+=G_BALL+((face>0?xx>NETX:xx<NETX)?gs:0);xx+=a;yy+=v;if(yy+BR>=GROUND)break}return xx};
   let lo=G_SPIN,hi=DRIVE_DIVE_MAX;
@@ -548,6 +551,7 @@ function clearsNet(x,y,vx,vy){
 function tryHit(p){
   const b=game.ball;
   if(game.phase!=="rally"||game.lastHitter===p.i||p.cd>0)return;
+  if(b.ult)return;   // the ultimate can't be returned
   if((b.x<NETX?0:1)!==p.i&&Math.abs(b.x-NETX)>5)return;
   const hx=p.x+p.face*HIT_DX,hy=p.y-HIT_DY;
   const swinging=p.swingT>3;
@@ -592,12 +596,25 @@ function tryHit(p){
     if(pw<1){const full=vx/pw;while(vx<full&&!clearsNet(b.x,b.y,p.face*vx,vy))vx+=.15}
     for(let n=0;n<14&&!clearsNet(b.x,b.y,p.face*vx,vy);n++)vy-=.25;   // flat or far shot that would clip the net: lift it just enough
   }
+  let ult=false;
+  if(swinging&&kind==="smash"&&!p.isAI&&Math.abs(p.vy)<=ULT_VY&&p.y<GROUND-ULT_MIN_H){
+    // steepest angle that clears the net and lands inside the court; if it would land long, take a little speed off
+    for(let sv=ULT_VX;sv>=6&&!ult;sv-=.5){
+      for(let v=2.4;v>=-9;v-=.25){
+        if(!clearsNet(b.x,b.y,p.face*sv,v))continue;
+        const lx=landX(b.x,b.y,p.face*sv,v,p.face,.4*G_SPIN),d=p.face*(lx-NETX);
+        if(d>=14&&d<=COURT_R-NETX-8){vx=sv;vy=v;ult=true}
+        break;
+      }
+    }
+  }
   if(kind==="drive"){
     const t=Math.max(0,Math.min(1,(pw-PW_TAP)/(PW_MAX-PW_TAP)));
     const depth=DRIVE_NEAR+(DRIVE_FAR-DRIVE_NEAR)*Math.sqrt(t)+(Math.random()-.5)*(p.isAI?AI_DEPTH_NOISE:8)+(p.isAI&&p.aiSlip?45:0);
     b.spin=driveDive(b.x,b.y,p.face*vx,vy,p.face,NETX+p.face*depth);
   }
-  b.vx=p.face*vx;b.vy=vy;
+  b.vx=p.face*vx;b.vy=vy;b.ult=ult;
+  if(ult){game.ultT=70;spark(b.x,b.y,true);spark(b.x-6,b.y+4,true);sfx.ult()}
   game.lastHitter=p.i;game.hits++;game.bounced=false;game.netTouch=false;p.cd=14;p.held=false;
   afterHit(p.i);
   if(kind==="smash"){sfx.smash();spark(b.x,b.y,true)}else{sfx.hit();spark(b.x,b.y)}
@@ -614,7 +631,7 @@ function onBounce(){
     if(game.hits===1&&Math.abs(b.x-NETX)<KITCHEN+1+BR)return rallyOver(hs,"發球落在廚房區！");
     game.bounced=true;
   }else{
-    rallyOver(side,"落地兩次！");
+    rallyOver(side,b.ult?"必殺技！":"落地兩次！");
   }
 }
 
@@ -744,10 +761,11 @@ function step(){
       b.x=b.px+(b.x-b.px)*tt;
       b.y=GROUND-BR;b.vy=-Math.abs(b.vy)*(b.cut?CUT_VY:b.smash?SMASH_BOUNCE_VY:.7);b.vx*=b.cut?CUT_VX:b.smash?.88*SMASH_BOUNCE_VX:.88*(b.spin?SPIN_KICK:1);b.spin=0;b.cut=false;b.smash=false;if(Math.abs(b.vy)<.6)b.vy=0;onBounce()}
     if((b.x<-14-EXT||b.x>W+14+EXT)&&game.phase==="rally"){
-      if(game.bounced)rallyOver(b.x<NETX?0:1,"沒接到！");else rallyOver(game.lastHitter,"出界！");
+      if(game.bounced)rallyOver(b.x<NETX?0:1,b.ult?"必殺技！":"沒接到！");else rallyOver(game.lastHitter,"出界！");
     }
-    if(Math.hypot(b.vx,b.vy)>5.4)game.trail.push({x:b.x,y:b.y,t:6});
+    if(Math.hypot(b.vx,b.vy)>5.4||b.ult)game.trail.push({x:b.x,y:b.y,t:b.ult?10:6,ult:!!b.ult});
   }
+  if(game.ultT>0)game.ultT--;
   game.trail.forEach(t=>t.t--);game.trail=game.trail.filter(t=>t.t>0);
   game.sparks.forEach(s=>s.t--);game.sparks=game.sparks.filter(s=>s.t>0);
   if(game.phase==="point"){
@@ -793,13 +811,19 @@ function render(){
   drawNet();
   const b=game.ball;
   if(b.x>-10-EXT&&b.x<W+10+EXT){
-    game.trail.forEach(t=>R(t.x-1,t.y-1,3,3,`rgba(232,240,74,${t.t/12})`));
+    game.trail.forEach(t=>t.ult?R(t.x-3,t.y-3,7,7,`rgba(255,${90+t.t*12},40,${t.t/12})`):R(t.x-1,t.y-1,3,3,`rgba(232,240,74,${t.t/12})`));
     if(b.y<-3){R(b.x-3,1,7,2,"#e8f04a")}
     else{const sh=Math.max(3,8-Math.round((GROUND-b.y)/30));ctx.fillStyle="rgba(12,40,30,.4)";ctx.fillRect(Math.round(b.x-sh/2),GROUND-1,sh,2);drawBall(b.x,b.y)}
   }
   game.sparks.forEach(s=>{const r=(s.big?16:10)-s.t+3,c=s.big?"#ffffff":"#fff7a8";
     R(s.x-r,s.y,3,1,c);R(s.x+r-2,s.y,3,1,c);R(s.x,s.y-r,1,3,c);R(s.x,s.y+r-2,1,3,c);
     if(s.big){R(s.x-r*.7,s.y-r*.7,2,2,c);R(s.x+r*.7,s.y-r*.7,2,2,c);R(s.x-r*.7,s.y+r*.7,2,2,c);R(s.x+r*.7,s.y+r*.7,2,2,c)}});
+  if(game.ultT>0&&(mode==="play")){
+    const a=Math.min(1,game.ultT/20);
+    if(game.ultT>62){ctx.fillStyle=`rgba(255,255,255,${(game.ultT-62)/10*.6})`;ctx.fillRect(-EXT,0,W+EXT*2,GROUND+10)}
+    ctx.save();ctx.globalAlpha=a;ctx.textAlign="center";ctx.font="28px 'DotGothic16',monospace";
+    ctx.fillStyle="#1a1a1a";ctx.fillText("必殺技！",NETX+2,92+2);ctx.fillStyle="#ff5a28";ctx.fillText("必殺技！",NETX,92);ctx.restore();
+  }
   if(mode==="play"||mode==="over"){
     drawNum(game.score[0],NETX-16,10,4,"#ffffff",true);
     drawNum(game.score[1],NETX+16,10,4,"#ffffff",false);
