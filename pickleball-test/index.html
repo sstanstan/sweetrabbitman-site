@@ -177,12 +177,14 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 .lb-url{display:flex;flex-direction:column;gap:10px;flex:1;min-width:220px}
 .go.ghost{background:none;color:var(--text);box-shadow:none;border:2px solid var(--line);font-size:12px;padding:10px 16px}
 #lbMsg{color:var(--hot)}
+.netstat{position:absolute;left:calc(var(--ext,0%) + 1.2%);top:2%;font-family:var(--f-dot);font-size:12px;line-height:1;background:rgba(10,24,48,.65);color:#fff;padding:4px 7px;pointer-events:none;z-index:3}
+.netstat i{font-style:normal}.netstat.good i{color:#7cf08a}.netstat.ok i{color:#ffd23c}.netstat.bad i{color:#ff6b6b}
 </style>
 </head>
 <body>
 
 <div class="app">
-  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v18 · 2026-10-24</b></span></div>
+  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v19 · 2026-10-24</b></span></div>
 
   <div class="stage" id="stage">
     <canvas id="cv" width="432" height="288"></canvas>
@@ -214,6 +216,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
       </div>
     </div>
 
+    <div class="netstat" id="netStat" hidden></div>
     <button class="mute" id="mute" aria-label="音效開關">♪ ON</button>
   </div>
 
@@ -2810,8 +2813,8 @@ function readInput(i){
 let mode="title";
 let twoP=false,paused=false,frame=0,blocked=false,pauseUI=false;
 let netRole=null; // null (offline) | "host" (runs the game, player 1) | "guest" (sends keys, draws what the host sends, player 2)
-const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0};
-const NET_VER="v18 · 2026-10-24".split(" · ")[0];
+const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0,rtt:null,path:"",statN:0,rxSeq:-1,rxSeqIn:-1,txSeq:0};
+const NET_VER="v19 · 2026-10-24".split(" · ")[0];
 const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ultT:0,ai:{noise:0,letGo:false},matchDone:false};
 function newPlayer(i){return{i,x:i?342:90,y:GROUND,vx:0,vy:0,ground:true,face:i?-1:1,swingT:0,shot:"normal",cd:0,prevSwing:false,volleyGuard:0}}
 game.players=[newPlayer(0),newPlayer(1)];
@@ -3432,7 +3435,9 @@ function netErr(e){
 }
 function netNewPeer(id){
   if(typeof Peer==="undefined")throw new Error("連線套件沒有載入");
-  return id?new Peer(id,{debug:0}):new Peer({debug:0});
+  // STUN only, on purpose: PeerJS's default list also contains TURN relays (Europe / US) that would silently carry the game when a direct link fails, and a relay from Taiwan means a very laggy match
+  const opt={debug:0,config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]}};
+  return id?new Peer(id,opt):new Peer(opt);
 }
 function netHost(){
   netLeave();lbMsg("建立房間中…");
@@ -3467,20 +3472,22 @@ function netJoin(code){
   const timer=setTimeout(()=>{if(net.peer===peer&&!(net.conn&&net.conn.open))netGone("連線逾時。確認房間號，或兩台裝置的網路是否允許互連。")},20000);
   peer.on("open",()=>{
     if(net.peer!==peer)return;
-    const c=peer.connect(peerId(code),{reliable:true,serialization:"json"});
+    const c=peer.connect(peerId(code),{reliable:false,serialization:"json"})   // unordered: a late packet never holds up the newer ones (stale ones are dropped by sequence number);
     net.conn=c;netConn(c);
   });
   peer.on("error",e=>{if(net.peer!==peer)return;clearTimeout(timer);netGone(netErr(e))});
 }
 function netConn(c){
   c.on("open",()=>{
-    net.lastRx=performance.now();
+    net.lastRx=performance.now();net.rtt=null;net.path="";net.statN=0;net.rxSeq=-1;net.rxSeqIn=-1;net.txSeq=0;
     c.send({t:"hello",v:NET_VER,cfg:cfg[0]});   // everyone plays online with their own saved look (MY LOOK)
     clearInterval(net.pingT);
     net.pingT=setInterval(()=>{
       if(net.conn!==c){clearInterval(net.pingT);return}
-      try{c.send({t:"p"})}catch(e){}
+      try{c.send({t:"p",ts:performance.now()})}catch(e){}
       if(performance.now()-net.lastRx>5000)netGone("連線中斷了。");
+      if(++net.statN%2===0)netPath(c);
+      netStatShow();
     },1000);
     if(net.role==="guest"){lbMsg("已連上，等房主開始…")}
   });
@@ -3506,11 +3513,19 @@ function netData(m){
       cfg[0]=hostLook;cfg[1]=dedupeLook(hostLook,mine);rebuildSprites();
       netRole="guest";
     }
+  }else if(m.t==="p"){
+    try{net.conn.send({t:"q",ts:m.ts})}catch(e){}
+  }else if(m.t==="q"){
+    const r=performance.now()-m.ts;net.rtt=net.rtt==null?r:net.rtt*.6+r*.4;
   }else if(m.t==="in"&&netRole==="host"){
+    if(m.q!=null){if(m.q<=net.rxSeqIn&&m.q>net.rxSeqIn-300)return;net.rxSeqIn=m.q}
     const I=net.inp,L=net.lat;
     I.left=!!m.l;I.right=!!m.r;I.jump=!!m.j;I.down=!!m.d;I.swing=!!m.s;
     if(m.l)L.left=true;if(m.r)L.right=true;if(m.j)L.jump=true;if(m.d)L.down=true;if(m.s)L.swing=true;
-  }else if(m.t==="s"&&netRole==="guest"){applySnap(m)}
+  }else if(m.t==="s"&&netRole==="guest"){
+    if(m.q<=net.rxSeq&&m.q>net.rxSeq-300)return;   // an old snapshot that arrived late
+    net.rxSeq=m.q;applySnap(m)
+  }
 }
 // the guest's keys as the host sees them: held keys plus any press that came and went between two host frames
 function remoteInput(){
@@ -3522,8 +3537,10 @@ function sendSnap(){
   const c=net.conn;
   if(!c||!c.open){net.evts.length=0;return}
   if(mode!=="play"&&mode!=="over"){net.evts.length=0;return}
+  const dc=c.dataChannel;
+  if(dc&&dc.bufferedAmount>6000){net.evts.length=Math.min(net.evts.length,30);return}   // the link is backed up: skip this one instead of piling up delay
   const P=p=>[r1(p.x),r1(p.y),r1(p.vx),p.face,p.swingT,p.held?1:0,p.hold||0,p.srv?1:0,p.shot];
-  const b=game.ball,s={t:"s",m:mode,P:[P(game.players[0]),P(game.players[1])],B:[r1(b.x),r1(b.y),r1(b.vx),r1(b.vy),b.ult?1:0],
+  const b=game.ball,s={t:"s",q:++net.txSeq,m:mode,P:[P(game.players[0]),P(game.players[1])],B:[r1(b.x),r1(b.y),r1(b.vx),r1(b.vy),b.ult?1:0],
     sc:game.score,sv:game.server,ph:game.phase,u:game.ultT,ev:net.evts};
   if(!$("banner").hidden)s.bn=[$("bnMain").textContent,$("bnSub").textContent];
   if(mode==="over"){s.ot=$("ovTitle").textContent;s.os=$("ovScore").textContent}
@@ -3553,15 +3570,39 @@ function applySnap(m){
 function guestStep(){
   const inp=readInput(0);tapped.clear();
   const c=net.conn;
-  if(mode==="play"&&c&&c.open)try{c.send({t:"in",l:+inp.left,r:+inp.right,j:+inp.jump,d:+inp.down,s:+inp.swing})}catch(e){}
+  if(mode==="play"&&c&&c.open)try{c.send({t:"in",q:++net.txSeq,l:+inp.left,r:+inp.right,j:+inp.jump,d:+inp.down,s:+inp.swing})}catch(e){}
   const b=game.ball;
   if((mode==="play"||mode==="over")&&(Math.hypot(b.vx,b.vy)>5.4||b.ult))game.trail.push({x:b.x,y:b.y,t:b.ult?10:6,ult:!!b.ult});
   game.trail.forEach(t=>t.t--);game.trail=game.trail.filter(t=>t.t>0);
   game.sparks.forEach(s=>s.t--);game.sparks=game.sparks.filter(s=>s.t>0);
 }
+// connection quality shown in the corner while playing: round-trip time and whether the two devices talk directly or through a relay
+function netPath(c){
+  try{
+    const pc=c.peerConnection;if(!pc||!pc.getStats)return;
+    pc.getStats().then(rep=>{
+      let pair=null;const cand={};
+      rep.forEach(r=>{if(r.type==="local-candidate"||r.type==="remote-candidate")cand[r.id]=r});
+      rep.forEach(r=>{if(r.type==="candidate-pair"&&(r.selected||(r.nominated&&r.state==="succeeded")))pair=r});
+      if(!pair)return;
+      const a=cand[pair.localCandidateId],b=cand[pair.remoteCandidateId];
+      const ty=[a&&a.candidateType,b&&b.candidateType];
+      net.path=ty.includes("relay")?"relay":(ty[0]==="host"&&ty[1]==="host")?"lan":"nat";
+    }).catch(()=>{});
+  }catch(e){}
+}
+function netStatShow(){
+  const el=$("netStat");
+  if(!netRole||(mode!=="play"&&mode!=="over")){el.hidden=true;return}
+  const ms=net.rtt==null?null:Math.round(net.rtt);
+  const label=net.path==="relay"?"中繼（很慢）":net.path==="lan"?"區網直連":net.path==="nat"?"經路由器":"連線中";
+  const bad=net.path==="relay"||(ms!=null&&ms>100),ok=!bad&&((ms!=null&&ms>40)||net.path==="nat");
+  el.className="netstat "+(bad?"bad":ok?"ok":"good");
+  el.innerHTML=`<i>●</i> ${label}${ms!=null?` ${ms}ms`:""}`;el.hidden=false;
+}
 function netLeave(){
   const c=net.conn,p=net.peer;
-  net.conn=null;net.peer=null;net.role=null;net.code="";netRole=null;net.inp={};net.lat={};net.evts=[];clearInterval(net.pingT);
+  net.conn=null;net.peer=null;net.role=null;net.code="";netRole=null;net.inp={};net.lat={};net.evts=[];clearInterval(net.pingT);$("netStat").hidden=true;net.rtt=null;net.path="";
   try{c&&c.close()}catch(e){}
   try{p&&p.destroy()}catch(e){}
   if(net.savedCfg){cfg=net.savedCfg;net.savedCfg=null;rebuildSprites()}
