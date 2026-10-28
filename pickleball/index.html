@@ -184,7 +184,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
 <body>
 
 <div class="app">
-  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v21 · 2026-10-24</b></span></div>
+  <div class="brand"><span>SWEET RABBIT MAN · <b>PICKLEBALL</b></span><span>單打 · 11 分制 · 領先 2 分獲勝 · 發球方得分制 · <b>v22 · 2026-10-28</b></span></div>
 
   <div class="stage" id="stage">
     <canvas id="cv" width="432" height="288"></canvas>
@@ -198,6 +198,7 @@ body.tplay.two:not(.land) .tc .set0 .tag{bottom:calc(2 * var(--dp) + 90px)}
         <button id="m2">2P START<small>兩人對打</small></button>
         <button id="m3">WIFI<small>wifi 連線對戰</small></button>
         <button id="m4">MY LOOK<small>設定我的造型</small></button>
+        <button id="m5">EASY：關<small>簡單模式：球慢、好接</small></button>
       </div>
     </div>
 
@@ -2610,6 +2611,9 @@ const COURT_L=36,COURT_R=396,KITCHEN=57;
 const G_BALL=0.243,G_P=0.36,SPEED=2.9,JUMP=6.3,BR=4;
 const HIT_DX=20,HIT_DY=28;
 const AI_MISTAKE=.1,AI_POWER_NOISE=.34,AI_DEPTH_NOISE=44; // how sloppy the computer is: chance per shot of overhitting it long, power error (+-half of this) and drive landing-depth error in px. Lower = stronger computer
+let EASY=false;try{EASY=localStorage.getItem("srm-pickle-easy")==="1"}catch(e){}
+const EASY_BALL=.7,EASY_REACH=14; // easy mode (1P/2P only, never wifi): ball runs at 70% speed (same arc, slower), human paddle reach +14px
+const ballK=()=>EASY&&!netRole?EASY_BALL:1;
 const VOLLEY_REACH=4; // extra hit radius (px) for a standing volley (feet on the ground, ball not yet bounced)
 // hand-feel tuning (v10): contact-point / incoming-speed influence on returns
 const CTL_REACH=.12,CTL_LIFT=.9,CTL_ABSORB=.1,CTL_ABSORB_DINK=.03,CTL_JITTER=.15;
@@ -2814,7 +2818,7 @@ let mode="title";
 let twoP=false,paused=false,frame=0,blocked=false,pauseUI=false;
 let netRole=null; // null (offline) | "host" (runs the game, player 1) | "guest" (sends keys, draws what the host sends, player 2)
 const net={role:null,peer:null,conn:null,code:"",inp:{},lat:{},evts:[],savedCfg:null,lastRx:0,pingT:0,rtt:null,path:"",statN:0,rxSeq:-1,rxSeqIn:-1,txSeq:0,hist:[],auth:null,ack:-1,q:[],cur:{},ackQ:-1,dispX:null,ex:EXT_MIN,sp:0,prevSw:false,lastPx:null};
-const NET_VER="v21 · 2026-10-24".split(" · ")[0];
+const NET_VER="v22 · 2026-10-28".split(" · ")[0];
 const game={score:[0,0],server:0,phase:"serve",timer:0,lastHitter:-1,hits:0,bounced:false,netTouch:false,players:[],ball:{x:0,y:0,vx:0,vy:0,px:0,py:0},sparks:[],trail:[],ultT:0,ai:{noise:0,letGo:false},matchDone:false};
 function newPlayer(i){return{i,x:i?342:90,y:GROUND,vx:0,vy:0,ground:true,face:i?-1:1,swingT:0,shot:"normal",cd:0,prevSwing:false,volleyGuard:0}}
 game.players=[newPlayer(0),newPlayer(1)];
@@ -2927,7 +2931,7 @@ function tryHit(p){
   const hx=p.x+p.face*HIT_DX,hy=p.y-HIT_DY;
   const swinging=p.swingT>3;
   if(!swinging)return;   // no passive bumps: the ball is only ever hit by an actual swing
-  const r=(swinging?16:11)+BR+(p.ground&&!game.bounced?VOLLEY_REACH:0);
+  const r=(swinging?16:11)+BR+(p.ground&&!game.bounced?VOLLEY_REACH:0)+(EASY&&!netRole&&!p.isAI?EASY_REACH:0);
   const dx=b.x-hx,dy=b.y-hy;
   if(dx*dx+dy*dy>r*r)return;
   if(swinging&&!p.isAI&&p.held&&p.hold<TAP_WAIT)return;   // wait a couple of frames to see whether it is a tap or a hold
@@ -3119,7 +3123,7 @@ function step(){
   if(game.phase==="serve"){holdBall()}
   else{
     b.px=b.x;b.py=b.y;
-    b.vy+=G_BALL+((game.lastHitter===0?b.x>NETX:b.x<NETX)?(b.spin||0)*G_SPIN:0);b.x+=b.vx;b.y+=b.vy;
+    const bk=ballK();b.vy+=(G_BALL+((game.lastHitter===0?b.x>NETX:b.x<NETX)?(b.spin||0)*G_SPIN:0))*bk;b.x+=b.vx*bk;b.y+=b.vy*bk;
     if(Math.abs(b.x-NETX)<NET_HW+BR&&b.y+BR>NET_TOP){
       // never let the ball settle on the tape or in the mesh: always keep it bouncing / sliding off to one side
       const dirX=b.vx>0?1:b.vx<0?-1:(b.x<NETX?-1:1);
@@ -3267,7 +3271,7 @@ addEventListener("resize",()=>{if(mode==="play"||mode==="over")applyLayout()});
 addEventListener("orientationchange",()=>setTimeout(applyLayout,120));
 $("portraitOk").addEventListener("click",()=>{portraitOK=true;applyLayout()});
 
-const titleBtns=[$("m1"),$("m2"),$("m3"),$("m4")],overBtns=[$("oAgain"),$("oSetup"),$("oTitle")],pauseBtns=[$("pResume"),$("pQuit")];
+const titleBtns=[$("m1"),$("m2"),$("m3"),$("m4"),$("m5")],overBtns=[$("oAgain"),$("oSetup"),$("oTitle")],pauseBtns=[$("pResume"),$("pQuit")];
 const overList=()=>overBtns.filter(b=>!b.hidden);
 let menuIdx=0;
 function menuFocus(list,i){menuIdx=(i+list.length)%list.length;list.forEach((b,j)=>b.classList.toggle("sel",j===menuIdx))}
@@ -3278,6 +3282,9 @@ $("m1").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=false;sf
 $("m2").addEventListener("click",()=>{ensureAudio();twoP=true;lookOnly=false;sfx.sel();startMatch()});
 $("m3").addEventListener("click",()=>{ensureAudio();twoP=false;sfx.sel();setMode("lobby")});
 $("m4").addEventListener("click",()=>{ensureAudio();twoP=false;lookOnly=true;setupBack="title";sfx.sel();setMode("setup")});
+function syncEasy(){const b=$("m5");b.firstChild.nodeValue="EASY："+(EASY?"開":"關");b.classList.toggle("on",EASY)}
+syncEasy();
+$("m5").addEventListener("click",()=>{ensureAudio();EASY=!EASY;try{localStorage.setItem("srm-pickle-easy",EASY?"1":"0")}catch(e){}syncEasy();sfx.sel()});
 $("oAgain").addEventListener("click",()=>{if(netRole==="guest")return;if(!twoP&&!netRole)cpuSwap();startMatch()});
 $("oSetup").addEventListener("click",()=>setMode("setup"));
 $("oTitle").addEventListener("click",()=>setMode("title"));
